@@ -1,0 +1,36 @@
+---
+title: 'Links'
+author: Jameel
+date: '2017-05-13'
+slug: links-1
+categories:
+  - Links
+tags:
+  - R
+  - Meta
+  - Links
+---
+
+I saw advice (that I am having trouble finding now) that an easy way to get started with blogging is with a links post. So that's what I'm doing. I've been doing a lot of R learning and programming lately, so I'm going to link some things I'm learning from.
+
+### Tools
+
+* To put this thing up, I followed the [quickstart guide for blogdown](https://bookdown.org/yihui/blogdown/).
+
+* The tidyverse now has a stand-alone [style guide](http://style.tidyverse.org/)! This has evolved from the presentation in advanced R book [here](http://adv-r.had.co.nz/Style.html), and based in part on [Google's R style guide](https://google.github.io/styleguide/Rguide.xml).
+
+* New dplyr 0.6.0 should be landing on CRAN very soon. Because I'm a bit of a tidyverse fanboy, I've been reading the [news file](https://github.com/tidyverse/dplyr/blob/master/NEWS.md) and checking the [latest commits](https://github.com/tidyverse/dplyr/commits/master) well more frequently than necessary. I am very excited because this version brings an overhaul of the system for programming with dplyr, which I think is going to really open up the possibilities for writing R functions that use dataframes as inputs and outputs, whereas most functions I've seen use several parrallel vectors. This is the [key article on programming dplyr > 0.6.0](http://dplyr.tidyverse.org/articles/programming.html). 
+
+### Meta
+
+* What's the right way to make a links post? I don't know yet, but here is how [Greater Greater Washington](https://ggwash.org/view/63404/breakfast-links-hogan-makes-a-legal-push-for-action-on-purple-line) does it,
+here is how [slatestarcodex](http://slatestarcodex.com/2017/05/09/links-517-rip-van-linkle/) does it, this is how Matt Yglesias used to do it in [his news letter](http://tinyletter.com/mattyglesias/letters/don-t-fall-for-their-hypocrisy), 
+* A couple quick examples of how other people make R blogs: a career-changing data scientist [Amber Thomas](https://proquestionasker.github.io/) with instructions [here](https://proquestionasker.github.io/blog/Making_Site/) and a data lover with some impressive js skills [Josh Kunst](http://jkunst.com/) with demo [here](http://jkunst.com/r/just-another-way-to-make-a-r-flavored-blog/?utm_content=buffer5e98b&utm_medium=social&utm_source=twitter.com&utm_campaign=buffer).
+
+### Content
+
+* One of the ways we are exacerbating inequality and passing it down from generation to generation is through expensive housing, the mortgage interest tax deduction, restrictive zoning codes, and tying public schools to real estate. The NYTimes has a feature story showing how [the MID helps the rich a lot, the middle class a little, and the poor basically not at all](https://www.nytimes.com/2017/05/09/magazine/how-homeownership-became-the-engine-of-american-inequality.html?smid=tw-share). As background, here is a write-up of Matt Yglesias's book from a few years ago ["The Rent is Too Damn High"](https://www.theatlantic.com/business/archive/2012/03/the-rent-really-is-too-damn-high/254718/) about how restrictive zoning codes are holding back our economy and making life more expensive than it has to be for everybody that rents.
+
+* I love comedians' biographies. Even the very famous ones strike me as less manufactured and more insightful than many other kinds of celebrities. Plus, they just strike me as the kind of people I'd like to hang out with. This week I laughed and cried reading about [Kumail Nanjiani](http://www.newyorker.com/magazine/2017/05/08/kumail-nanjianis-culture-clash-comedy) who I only know from Silicon Valley, but now has a semi-biographical movie coming out. I'm excited to see it. Other classics about comedians' life include [Steve Martin](https://www.goodreads.com/book/show/773858.Born_Standing_Up?ac=1&from_search=true), [Tina Fey](https://www.goodreads.com/book/show/9418327-bossypants), and I feel like [Aziz Ansari's](https://www.theatlantic.com/entertainment/archive/2015/11/master-of-none-is-aziz-ansaris-best-work-yet/414439/) and [Louie C.K.'s](http://www.npr.org/2015/04/28/402560343/louis-c-k-on-life-and-standup-i-live-in-service-for-my-kids) shows also fit the mold.
+
+Does this mean I've started? Maybe not yet.
