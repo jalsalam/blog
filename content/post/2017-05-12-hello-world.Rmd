@@ -1,0 +1,13 @@
+---
+title: '"Hello, World!"'
+author: Jameel
+date: '2017-05-12'
+slug: hello-world
+categories: []
+tags: []
+---
+
+```{r post}
+x <- "Hello, World!"
+x
+```
