@@ -1,0 +1,118 @@
+---
+title: 'A Look at R Algo Optimization: Sieve of Eratosthenes'
+author: Jameel
+date: '2017-05-20'
+slug: a-look-at-r-algo-optimization-sieve-of-eratosthenes
+categories:
+  - R
+tags:
+  - R
+  - EulerProbs
+---
+
+
+
+<p>In the course of working on problem #3 at <a href="https://projecteuler.net/problem=3">Project Euler</a>, I decided to take a detour to do a comparison of various implementations of the sieve of Eratosthenes. The problem asks:</p>
+<blockquote>
+<p>What is the largest prime factor of the number 600851475143 ?</p>
+</blockquote>
+<p>I decided to begin approaching this by generating all primes less than this. So how do you generate the primes? The <a href="https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes">Sieve of Eratosthenes</a> jumps to mind:</p>
+<blockquote>
+<p>To find all the prime numbers less than or equal to a given integer n by Eratosthenes’ method:</p>
+<ol style="list-style-type: decimal">
+<li>Create a list of consecutive integers from 2 through n: (2, 3, 4, …, n).</li>
+<li>Initially, let p equal 2, the smallest prime number.</li>
+<li>Enumerate the multiples of p by counting to n from 2p in increments of p, and mark them in the list (these will be 2p, 3p, 4p, …; the p itself should not be marked).</li>
+<li>Find the first number greater than p in the list that is not marked. If there was no such number, stop. Otherwise, let p now equal this new number (which is the next prime), and repeat from step 3.</li>
+<li>When the algorithm terminates, the numbers remaining not marked in the list are all the primes below n.</li>
+</ol>
+</blockquote>
+<p>Now, 6e11 is a pretty big number but… To put this in perspective, my computer has 16 GB of memory, which is only 16e9 bytes… but <em>whatever</em> (now that I’m this far, its obvious this is the long way around, but I’m having <em>fun</em>!). I have to admit that at this point I was feeling a bit intimidated, and decided to <a href="https://www.google.com/search?q=sieve+of+eratosthenes+r&amp;oq=sieve+o&amp;aqs=chrome.2.69i59j69i57j35i39j0l3.2233j0j7&amp;sourceid=chrome&amp;ie=UTF-8">google “sieve of eratosthenes R”</a> to get started on the right foot.</p>
+<p><a href="https://gist.github.com/seankross/5946396">First hit</a>:</p>
+<pre class="r"><code>sieve_1 &lt;- function(n){
+  values &lt;- rep(TRUE, n)
+    values[1] &lt;- FALSE
+    last.prime &lt;- 2
+    for(i in last.prime:sqrt(n)){
+        values[seq.int(2 * last.prime, n, last.prime)] &lt;- FALSE
+        last.prime &lt;- last.prime + min(which(values[(last.prime + 1) : n]))
+    }
+    return(which(values))
+}</code></pre>
+<p>And a more refined one within this <a href="http://stackoverflow.com/questions/3789968/generate-a-list-of-primes-in-r-up-to-a-certain-number">second hit</a>:</p>
+<pre class="r"><code>sieve_2 &lt;- function(n)
+{
+  n &lt;- as.integer(n)
+  if(n &gt; 1e9) stop(&quot;n too large&quot;)
+  values &lt;- rep(TRUE, n)
+  values[1] &lt;- FALSE
+  last.prime &lt;- 2L
+  fsqr &lt;- floor(sqrt(n))
+  while (last.prime &lt;= fsqr)
+  {
+    values[seq.int(2L*last.prime, n, last.prime)] &lt;- FALSE
+    sel &lt;- which(values[(last.prime+1):(fsqr+1)])
+    if(any(sel)){
+      last.prime &lt;- last.prime + min(sel)
+    }else last.prime &lt;- fsqr+1
+  }
+  which(values)
+}</code></pre>
+<p>(note that I’ve modified the code in both to use the same names to make the remaining differences clear)</p>
+<p>A quick performance comparison:</p>
+<pre class="r"><code>library(&quot;microbenchmark&quot;)
+
+microbenchmark(
+  sieve_1(1e4),
+  sieve_2(1e4),
+  times = 10
+)</code></pre>
+<pre><code>## Unit: microseconds
+##            expr      min       lq      mean   median       uq       max
+##  sieve_1(10000) 7320.440 7441.511 10895.399 7690.948 7852.134 34458.653
+##  sieve_2(10000)  150.246  157.174  1034.978  164.468  218.440  8394.401
+##  neval
+##     10
+##     10</code></pre>
+<p>Suffice it to say, the second one is way better. sieve_2 is running about 40X faster. I tried other values, and the differences are magnified the higher you get. Now, the two implementations are actually <em>very similar</em>, so what are the differences that are creating these large performance differences? Things I see:</p>
+<ol style="list-style-type: decimal">
+<li>sieve_2 uses a <em>while loop instead of a for loop</em>. This is important because you don’t actually know how many iterations are going to be necessary before you start. sieve_1 includes a line that looks like maybe it is intended to jump forward when a prime is identified to the next non-prime, but it actually doesn’t because once the for loop starts, you can’t modify its counter.</li>
+</ol>
+<p>A modified version of sieve_1 to instead use a while loop might look like this:</p>
+<pre class="r"><code>sieve_1_v2 &lt;- function(n){
+  values &lt;- rep(TRUE, n)
+    values[1] &lt;- FALSE
+    last.prime &lt;- 2
+    
+    while(last.prime &lt; sqrt(n)){
+        values[seq.int(2 * last.prime, n, last.prime)] &lt;- FALSE
+        last.prime &lt;- last.prime + min(which(values[(last.prime + 1) : n]))
+    }
+    return(which(values))
+}
+
+microbenchmark(
+  sieve_1(1e4),
+  sieve_1_v2(1e4),
+  times = 10
+)</code></pre>
+<pre><code>## Unit: milliseconds
+##               expr      min       lq     mean   median       uq      max
+##     sieve_1(10000) 7.127164 7.246412 7.549564 7.420908 7.928349 8.230298
+##  sieve_1_v2(10000) 1.500629 1.916356 2.544176 1.962122 2.064413 7.964452
+##  neval
+##     10
+##     10</code></pre>
+<p>This minor change has created an improvement of a factor of 3. To explain this, I tracked how many times each one iterates.</p>
+<pre><code>## [1] &quot;sieve_1 iterated 99 times.&quot;</code></pre>
+<pre><code>## [1] &quot;sieve_1_v2 iterated 25 times.&quot;</code></pre>
+<pre><code>## [1] &quot;sieve_2 iterated 25 times.&quot;</code></pre>
+<p>I’m assuming there’s a shmancy way to do this, but I just inserted counters inside the loops and then printed at the end. It was a little annoying, because I didn’t want to mess up the functions, so I made alternate “tracked” versions of them. From here, what else can we improve?</p>
+<ol start="2" style="list-style-type: decimal">
+<li><p>Between the improved version and sieve_2, the better one pre-stores some values that are re-used. For example, sieve_2 only calculates sqrt(n) a single time prior to the loop beginning, whereas sieve_1_v2 does it for each iteration of the loop.</p></li>
+<li><p>sieve_2 also specifically labels some of the variables as integers that might otherwise be doubles. This is a little awkward, because one strength of R is that you don’t need to worry about types, but I guess once you start optimizing things, you actually do.</p></li>
+<li><p>The formulas in sieve_2 seem a little bit different, like some pieces have been factored out to avoid repetition. This will take some closer looking. But I don’t have the time for these right now.</p></li>
+</ol>
+<p>Now, none of these are going to be good enough for Euler #3. To get all the primes up to where we need, we either need to split up the task into bits, or a different approach that works better for big numbers, or a different strategy entirely. But all that is probaby for another time. I would like to say that I will update this post with some enhancements later on, but I don’t fully know if blogdown lets you do that.</p>
+<p>There are also some optimizations of the sieve algorithm. For example, you can start by omitting the even numbers, and I think something to do with multiples of 30. I don’t immediately know how that would interect with the strategy these implementations are using of using a vector of logicals. More things to explore!</p>
+<p>P.S., I wanted to highlight the specific changes that I made within the code, but I don’t know how to do that within rmarkdown. There must be a way. Let me know if you know what it is! Or if you know a good way to go about updating posts. Like, do you need to change both the date field and the filename? Is there a way to use commit references from git? I dunno, but I can tell there are things to learn there.</p>
