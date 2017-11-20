@@ -8,7 +8,7 @@ disqusShortname = ""
 ignoreFiles = ["\\.Rmd$", "_files$", "_cache$"]
 
 [permalinks]
-    post = "/:year/:month/:day/:slug/"
+    post = "/posts/:year/:slug/"
 
 [[menu.main]]
     name = "About"

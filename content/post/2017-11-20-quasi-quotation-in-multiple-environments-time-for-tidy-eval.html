@@ -1,0 +1,84 @@
+---
+title: "Quasi-Quotation w/Environments -> Time for Tidy-Eval"
+author: "Jameel Alsalam"
+date: '2017-11-20'
+draft: yes
+slug: multi-environments-tidy-eval
+tags: []
+categories:
+- quasiquotation
+- R
+---
+
+
+
+<pre class="r"><code>knitr::opts_chunk$set(error = TRUE)</code></pre>
+<div id="quote-v.-quo-v.-expr-which-pantry-to-look-in" class="section level2">
+<h2><code>quote()</code> v. <code>quo()</code> v. <code>expr()</code>: Which Pantry to Look In</h2>
+<p>To play out this example, we are going to start over, and distribute the task of making this cake to several friends. Friend1 has the necessary ingredients for the cake, Friend2 has the ingredients for the frosting, and the global environment has the candle.</p>
+<pre class="r"><code>#starting over, so please clear the environment
+rm(list = ls())
+library(rlang)
+
+friend1 &lt;- function(){
+  flour &lt;- 20
+  eggs  &lt;- 50
+  sugar &lt;- 72
+  
+  cake_recipe_quo   &lt;-   quo(flour + eggs + sugar)
+  cake_recipe_expr  &lt;-  expr(flour + eggs + sugar)
+  cake_recipe_quote &lt;- quote(flour + eggs + sugar)
+
+  return(list(quo   = cake_recipe_quo, 
+              expr  = cake_recipe_expr,
+              quote = cake_recipe_quote))
+}
+
+friend2 &lt;- function(){
+  sugar &lt;- 87
+  vanilla &lt;- 10
+  butter &lt;- 60
+  milk  &lt;- 30
+  
+  frosting_recipe_quo   &lt;-   quo(sugar + vanilla + butter + milk)
+  frosting_recipe_expr  &lt;-  expr(sugar + vanilla + butter + milk)
+  frosting_recipe_quote &lt;- quote(sugar + vanilla + butter + milk)
+  
+  return(list(quo   = frosting_recipe_quo, 
+              expr  = frosting_recipe_expr,
+              quote = frosting_recipe_quote))
+}
+
+candle &lt;- 0
+cake_recipes     &lt;- friend1()
+frosting_recipes &lt;- friend2()</code></pre>
+<p>The three versions <strong>look</strong> similar, but they have different scoping characteristics when we try to bake them.</p>
+<pre class="r"><code>bake &lt;- eval_tidy
+
+bake(cake_recipes$quo)</code></pre>
+<pre><code>## [1] 142</code></pre>
+<p>The reason <code>quo</code> works here is that the quosure is not <em>just</em> the expression – it also carries along information about the environment in which it was created (“lexical scoping”). The version <code>cake_recipes$quo</code> was created inside the friend1 function, where the ingredients are also defined. So it works fine.</p>
+<pre class="r"><code>bake(cake_recipes$expr)</code></pre>
+<pre><code>## Error in overscope_eval_next(overscope, expr): object &#39;flour&#39; not found</code></pre>
+<p>This variation gives an error because <code>expr</code> just creates a bare expression without any information about where to look for the ingredients. So when it is evaluated at the top level, R looks for <code>flour</code> in the global environment and doesn’t find it.</p>
+<pre class="r"><code>bake(cake_recipes$quote)</code></pre>
+<pre><code>## Error in overscope_eval_next(overscope, expr): object &#39;flour&#39; not found</code></pre>
+<p>Similar problem here – R doesn’t look in the right place for the ingredients.</p>
+<p>To finish everything off, let’s show that we can not only rewrite a recipe for the full cake, but also pass the recipe to a third friend which doesn’t have ANY ingredients in its local environment, but nonetheless that friend can evaluate the quosure.</p>
+<pre class="r"><code>birthday_cake_recipe &lt;- quo((!!cake_recipes$quo) + (!!frosting_recipes$quo) + candle)
+print(&quot;The recipe is:&quot;)</code></pre>
+<pre><code>## [1] &quot;The recipe is:&quot;</code></pre>
+<pre class="r"><code>birthday_cake_recipe</code></pre>
+<pre><code>## &lt;quosure: global&gt;
+## ~(~flour + eggs + sugar) + (~sugar + vanilla + butter + milk) + 
+##     candle</code></pre>
+<pre class="r"><code>friend3 &lt;- function(a_quosure){
+  birthday_cake &lt;- eval_tidy(a_quosure)
+}
+
+my_birthday_cake &lt;- friend3(birthday_cake_recipe)
+print(&quot;This is the actual cake, in terms of calories:&quot;)</code></pre>
+<pre><code>## [1] &quot;This is the actual cake, in terms of calories:&quot;</code></pre>
+<pre class="r"><code>my_birthday_cake</code></pre>
+<pre><code>## [1] 329</code></pre>
+</div>

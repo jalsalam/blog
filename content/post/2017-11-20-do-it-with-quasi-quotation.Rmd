@@ -10,11 +10,13 @@ tags:
   - rlang
 ---
 
-_This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post shows some useful things you can actually do with these tools without attempting to explain what's going on. The companion post tries to establish a mental model for quasi-quotation by analogy to a meta-recipe for cake._
+_This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post shows some useful things you can actually do with these tools without attempting to explain what's going on. The [companion post](/posts/2017/quasi-quotation-as-meta-recipe/) tries to establish a mental model for quasi-quotation by analogy to a meta-recipe for cake._
 
 _The R language has a powerful set of features for manipulating expressions which has recently been extended by the tidyverse team in the rlang package. I am really excited about the power and generality of quasi-quotation, especially in the realms of higher-order functions and creating unique function APIs. That said, I would recommend R users feel very comfortable with functions and functional programming (e.g., `apply` and/or `map` families of functions) before attempting quasi-quotation._
 
 So you've already made an initial attempt to learn quasi-quotation/tidy evaluation, and the hill to understanding these tools still looks high. You are asking "why bother?", and tempted to just stick with what you know until forced, kicking-and-screaming to do it the "new way." In the following I will try to provide some quick wins and also show a taste of the power of quasi-quotation.
+
+![air quotes](https://media.giphy.com/media/qs6ev2pm8g9dS/giphy.gif)
 
 ```{r setup}
 suppressPackageStartupMessages(library("tidyverse"))
@@ -40,6 +42,10 @@ fruit_lookup <- set_names(fruits, c("a", "b", "c"))
 
 recode(x, !!!fruit_lookup)
 ```
+
+Note: I think this used to work with a named character vector, but now `!!!`/`UQS()` only works with lists, so you make it a list. 
+
+I find the term "splice" confusing -- something to do with DNA? I want to find an animation to demonstrate what splicing means, but I haven't found it yet. In the mean time, just know that you can pass a named list to `recode` lots of values. This was my first practical use of the `rlang` tools.
 
 
 

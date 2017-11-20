@@ -9,7 +9,7 @@ tags:
   - rlang
 ---
 
-_This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post tries to establish a mental model for quasi-quotation. The companion post shows some useful things you can actually do with these tools._
+_This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post tries to establish a mental model for quasi-quotation. The [companion post](/posts/2017/quasi-quotation-applications/) shows some useful things you can actually do with these tools._
 
 _The R language has a powerful set of features for manipulating expressions which has recently been extended by the tidyverse team in the rlang package. I am really excited about the power and generality of quasi-quotation, especially in the realms of higher-order functions and creating unique function APIs. That said, I would recommend R users feel very comfortable with functions and functional programming (e.g., `apply` and/or `map` families of functions) before attempting quasi-quotation._
 
@@ -17,7 +17,7 @@ _The R language has a powerful set of features for manipulating expressions whic
 
 Consider the following interesting recipe:
 
-[insert a photo here, ideally from a real book. It shoudl include ingredients which refer to other recipes. For example, I am imagining a theoretical cake recipe which also calls for a special frosting which is separately described on p121]
+![meta-cake-recipe](/img/meta-cake-recipe.jpg)
 
 Most recipes aren't like this, but I think most people have seen this kind of thing. I want to call it a "meta-recipe."
 
@@ -183,85 +183,4 @@ full_birthday_cake_recipe
 
 We have rewritten the recipe to include all the details on how to make the components. So now our friend wants to actually make it. We have finished our basic task. But there's a twist! Notice that both the `cake_recipe` and the `frosting_recipe` include `sugar`. But it isn't the same sugar. If we were actually reading the recipe in a recipe book, there would have been context to show that the sugar for the frosting is *powdered sugar* whereas the cake uses the special sauce of `quo()` and `eval_tidy()`.
 
-## `quote()` v. `quo()` v. `expr()`: Which Pantry to Look In
-
-To play out this example, we are going to start over, and distribute the task of making this cake to several friends. Friend1 has the necessary ingredients for the cake, Friend2 has the ingredients for the frosting, and the global environment has the candle.
-
-```{r}
-#starting over, so please clear the environment
-rm(list = ls())
-library(rlang)
-
-friend1 <- function(){
-  flour <- 20
-  eggs  <- 50
-  sugar <- 72
-  
-  cake_recipe_quo   <-   quo(flour + eggs + sugar)
-  cake_recipe_expr  <-  expr(flour + eggs + sugar)
-  cake_recipe_quote <- quote(flour + eggs + sugar)
-
-  return(list(quo   = cake_recipe_quo, 
-              expr  = cake_recipe_expr,
-              quote = cake_recipe_quote))
-}
-
-friend2 <- function(){
-  sugar <- 87
-  vanilla <- 10
-  butter <- 60
-  milk  <- 30
-  
-  frosting_recipe_quo   <-   quo(sugar + vanilla + butter + milk)
-  frosting_recipe_expr  <-  expr(sugar + vanilla + butter + milk)
-  frosting_recipe_quote <- quote(sugar + vanilla + butter + milk)
-  
-  return(list(quo   = frosting_recipe_quo, 
-              expr  = frosting_recipe_expr,
-              quote = frosting_recipe_quote))
-}
-
-candle <- 0
-cake_recipes     <- friend1()
-frosting_recipes <- friend2()
-```
-
-The three versions **look** similar, but they have different scoping characteristics when we try to bake them.
-
-```{r}
-bake <- eval_tidy
-
-bake(cake_recipes$quo)
-```
-
-The reason `quo` works here is that the quosure is not *just* the expression -- it also carries along information about the environment in which it was created ("lexical scoping"). The version `cake_recipes$quo` was created inside the friend1 function, where the ingredients are also defined. So it works fine.
-
-```{r}
-bake(cake_recipes$expr)
-```
-
-This variation gives an error because `expr` just creates a bare expression without any information about where to look for the ingredients. So when it is evaluated at the top level, R looks for `flour` in the global environment and doesn't find it.
-
-```{r}
-bake(cake_recipes$quote)
-
-```
-
-Similar problem here -- R doesn't look in the right place for the ingredients.
-
-To finish everything off, let's show that we can not only rewrite a recipe for the full cake, but also pass the recipe to a third friend which doesn't have ANY ingredients in its local environment, but nonetheless that friend can evaluate the quosure.
-
-```{r}
-birthday_cake_recipe <- quo((!!cake_recipes$quo) + (!!frosting_recipes$quo) + candle)
-print("The recipe is:")
-birthday_cake_recipe
-
-friend3 <- function(a_quosure){
-  birthday_cake <- eval_tidy(a_quosure)
-}
-
-my_birthday_cake <- friend3(birthday_cake_recipe)
-print("This is the actual cake, in terms of calories:")
-my_birthday_cake
-```
 

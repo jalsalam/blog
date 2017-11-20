@@ -12,9 +12,13 @@ tags:
 
 
 
-<p><em>This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post shows some useful things you can actually do with these tools without attempting to explain what’s going on. The companion post tries to establish a mental model for quasi-quotation by analogy to a meta-recipe for cake.</em></p>
+<p><em>This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post shows some useful things you can actually do with these tools without attempting to explain what’s going on. The <a href="/posts/2017/quasi-quotation-as-meta-recipe/">companion post</a> tries to establish a mental model for quasi-quotation by analogy to a meta-recipe for cake.</em></p>
 <p><em>The R language has a powerful set of features for manipulating expressions which has recently been extended by the tidyverse team in the rlang package. I am really excited about the power and generality of quasi-quotation, especially in the realms of higher-order functions and creating unique function APIs. That said, I would recommend R users feel very comfortable with functions and functional programming (e.g., <code>apply</code> and/or <code>map</code> families of functions) before attempting quasi-quotation.</em></p>
 <p>So you’ve already made an initial attempt to learn quasi-quotation/tidy evaluation, and the hill to understanding these tools still looks high. You are asking “why bother?”, and tempted to just stick with what you know until forced, kicking-and-screaming to do it the “new way.” In the following I will try to provide some quick wins and also show a taste of the power of quasi-quotation.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/qs6ev2pm8g9dS/giphy.gif" alt="air quotes" />
+<p class="caption">air quotes</p>
+</div>
 <pre class="r"><code>suppressPackageStartupMessages(library(&quot;tidyverse&quot;))
 library(&quot;rlang&quot;)</code></pre>
 <pre><code>## 
@@ -33,13 +37,15 @@ library(&quot;rlang&quot;)</code></pre>
 <pre class="r"><code># Recode values with named arguments
 x &lt;- sample(c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;), 10, replace = TRUE)
 dplyr::recode(x, a = &quot;Apple&quot;)</code></pre>
-<pre><code>##  [1] &quot;Apple&quot; &quot;Apple&quot; &quot;c&quot;     &quot;b&quot;     &quot;c&quot;     &quot;c&quot;     &quot;c&quot;     &quot;c&quot;    
-##  [9] &quot;b&quot;     &quot;b&quot;</code></pre>
+<pre><code>##  [1] &quot;b&quot;     &quot;c&quot;     &quot;Apple&quot; &quot;b&quot;     &quot;b&quot;     &quot;c&quot;     &quot;Apple&quot; &quot;Apple&quot;
+##  [9] &quot;Apple&quot; &quot;Apple&quot;</code></pre>
 <p>But wait – do you really have to manually type in EVERY value that you want to replace?!?! Nope. You need to create a named list, and then use the <code>!!!</code> operator (pronounced ‘bang bang bang’ or unquote-splice).</p>
 <pre class="r"><code>fruits &lt;- list(&quot;Apple&quot;, &quot;Banana&quot;, &quot;Carrot&quot;)
 fruit_lookup &lt;- set_names(fruits, c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;))
 
 recode(x, !!!fruit_lookup)</code></pre>
-<pre><code>##  [1] &quot;Apple&quot;  &quot;Apple&quot;  &quot;Carrot&quot; &quot;Banana&quot; &quot;Carrot&quot; &quot;Carrot&quot; &quot;Carrot&quot;
-##  [8] &quot;Carrot&quot; &quot;Banana&quot; &quot;Banana&quot;</code></pre>
+<pre><code>##  [1] &quot;Banana&quot; &quot;Carrot&quot; &quot;Apple&quot;  &quot;Banana&quot; &quot;Banana&quot; &quot;Carrot&quot; &quot;Apple&quot; 
+##  [8] &quot;Apple&quot;  &quot;Apple&quot;  &quot;Apple&quot;</code></pre>
+<p>Note: I think this used to work with a named character vector, but now <code>!!!</code>/<code>UQS()</code> only works with lists, so you make it a list.</p>
+<p>I find the term “splice” confusing – something to do with DNA? I want to find an animation to demonstrate what splicing means, but I haven’t found it yet. In the mean time, just know that you can pass a named list to <code>recode</code> lots of values. This was my first practical use of the <code>rlang</code> tools.</p>
 </div>

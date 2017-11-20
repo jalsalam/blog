@@ -1,0 +1,97 @@
+---
+title: "Quasi-Quotation w/Environments -> Time for Tidy-Eval"
+author: "Jameel Alsalam"
+date: '2017-11-20'
+draft: yes
+slug: multi-environments-tidy-eval
+tags: []
+categories:
+- quasiquotation
+- R
+---
+
+```{r setup, cache = F}
+knitr::opts_chunk$set(error = TRUE)
+```
+
+## `quote()` v. `quo()` v. `expr()`: Which Pantry to Look In
+
+To play out this example, we are going to start over, and distribute the task of making this cake to several friends. Friend1 has the necessary ingredients for the cake, Friend2 has the ingredients for the frosting, and the global environment has the candle.
+
+```{r}
+#starting over, so please clear the environment
+rm(list = ls())
+library(rlang)
+
+friend1 <- function(){
+  flour <- 20
+  eggs  <- 50
+  sugar <- 72
+  
+  cake_recipe_quo   <-   quo(flour + eggs + sugar)
+  cake_recipe_expr  <-  expr(flour + eggs + sugar)
+  cake_recipe_quote <- quote(flour + eggs + sugar)
+
+  return(list(quo   = cake_recipe_quo, 
+              expr  = cake_recipe_expr,
+              quote = cake_recipe_quote))
+}
+
+friend2 <- function(){
+  sugar <- 87
+  vanilla <- 10
+  butter <- 60
+  milk  <- 30
+  
+  frosting_recipe_quo   <-   quo(sugar + vanilla + butter + milk)
+  frosting_recipe_expr  <-  expr(sugar + vanilla + butter + milk)
+  frosting_recipe_quote <- quote(sugar + vanilla + butter + milk)
+  
+  return(list(quo   = frosting_recipe_quo, 
+              expr  = frosting_recipe_expr,
+              quote = frosting_recipe_quote))
+}
+
+candle <- 0
+cake_recipes     <- friend1()
+frosting_recipes <- friend2()
+```
+
+The three versions **look** similar, but they have different scoping characteristics when we try to bake them.
+
+```{r}
+bake <- eval_tidy
+
+bake(cake_recipes$quo)
+```
+
+The reason `quo` works here is that the quosure is not *just* the expression -- it also carries along information about the environment in which it was created ("lexical scoping"). The version `cake_recipes$quo` was created inside the friend1 function, where the ingredients are also defined. So it works fine.
+
+```{r}
+bake(cake_recipes$expr)
+```
+
+This variation gives an error because `expr` just creates a bare expression without any information about where to look for the ingredients. So when it is evaluated at the top level, R looks for `flour` in the global environment and doesn't find it.
+
+```{r}
+bake(cake_recipes$quote)
+
+```
+
+Similar problem here -- R doesn't look in the right place for the ingredients.
+
+To finish everything off, let's show that we can not only rewrite a recipe for the full cake, but also pass the recipe to a third friend which doesn't have ANY ingredients in its local environment, but nonetheless that friend can evaluate the quosure.
+
+```{r}
+birthday_cake_recipe <- quo((!!cake_recipes$quo) + (!!frosting_recipes$quo) + candle)
+print("The recipe is:")
+birthday_cake_recipe
+
+friend3 <- function(a_quosure){
+  birthday_cake <- eval_tidy(a_quosure)
+}
+
+my_birthday_cake <- friend3(birthday_cake_recipe)
+print("This is the actual cake, in terms of calories:")
+my_birthday_cake
+```
