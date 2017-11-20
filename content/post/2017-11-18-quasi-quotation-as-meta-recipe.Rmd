@@ -1,0 +1,267 @@
+---
+title: "Quasi-Quotation By Analogy: A Meta-Recipe for Cake"
+author: Jameel Alsalam
+date: '2017-11-18'
+slug: quasi-quotation-as-meta-recipe
+categories:
+  - quasiquotation
+tags:
+  - rlang
+---
+
+_This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post tries to establish a mental model for quasi-quotation. The companion post shows some useful things you can actually do with these tools._
+
+_The R language has a powerful set of features for manipulating expressions which has recently been extended by the tidyverse team in the rlang package. I am really excited about the power and generality of quasi-quotation, especially in the realms of higher-order functions and creating unique function APIs. That said, I would recommend R users feel very comfortable with functions and functional programming (e.g., `apply` and/or `map` families of functions) before attempting quasi-quotation._
+
+**Warning**: Embarking on an extended analogy wherein the quasi-quotation tools in R and the rlang package are compared to a recipes.
+
+Consider the following interesting recipe:
+
+[insert a photo here, ideally from a real book. It shoudl include ingredients which refer to other recipes. For example, I am imagining a theoretical cake recipe which also calls for a special frosting which is separately described on p121]
+
+Most recipes aren't like this, but I think most people have seen this kind of thing. I want to call it a "meta-recipe."
+
+Notice that there are two fundamentally different types of "ingredients" in this recipe. First there are basic ingredients that you can find in your pantry, like ?? butter, ?? sugar, and ??eggs. But 'German Chocolate Frosting' isn't an ingredient in the normal sense. We expect that if we turn to page 121, we will find a recipe for the frosting which starts from basic ingredients.
+
+Now imagine that you made this cake and your friend loved it. He asks for the recipe. If you give him the photo above, it would be fundamentally incomplete. One idea is to rewrite this recipe by copy-and-pasting the recipe for the frosting into the larger cake recipe, so that the frosting and the cake is all part of one recipe.
+
+Doing that is quasi-quotation.
+
+Before we do the "meta-recipe" in code, I do that in code, I want to make a digression into "normal" code, before we get into the fancy parts.
+
+```{r setup, cache = F}
+knitr::opts_chunk$set(error = TRUE)
+```
+
+## Expressions are Recipes
+
+Normally, when you tell R how to bake a cake, it goes right to work.
+
+```{r}
+cake <- flour + sugar + eggs
+```
+
+In this example, the expression `flour + sugar + eggs` is an expression, or a recipe. When we run this, R will immediately try to evaluate the expression and store it in a new object called `cake`. What happened here is that in the process of trying to follow our recipe, it looked in the pantry for flour, it couldn't find any.
+
+```{r}
+objects()
+```
+
+## The Environment is the Pantry
+
+So first, lets stock the pantry. We will assign these variables based on the number of calories in an arbitrary serving.
+
+```{r}
+flour <- 20
+eggs  <- 50
+sugar <- 72
+
+objects()
+```
+
+## Evaluating is Baking
+
+Now let's try again to bake that cake:
+
+```{r}
+cake <- flour + sugar + eggs
+
+cake
+```
+
+We've got a cake! Apparently it has `r cake` calories. Not surprising, as cake is very tasty!
+
+## The Recipe versus the Cake
+
+The big idea here is you don't have to immediately bake the cake. In R there are language features and quotation functions which make it possible to write down recipes and bake them at a later time.
+
+In service of this extended comparison, I am going to rename my own quoting function `recipe` as follows:
+
+```{r}
+recipe <- rlang::expr
+```
+
+Note that I am using `rlang::expr` here, but the basic metaphor is equally applicable to base `quote` or `rlang::quo`. The distinction is in which pantry to look in, and I won't get to it until the end. Remeber, the metaphor is:
+
+**The recipe is to the cake as an expression is to the result of evaluating the expression.**
+
+Anyway, let's write down the recipe for cake.
+
+```{r}
+cake_recipe <- recipe(flour + sugar + eggs)
+
+cake_recipe
+```
+
+Great, now we have the recipe written down. Note that when we type regular code into R, it immediately evaluates it. But when we type `cake_recipe` into the console it just prints the recipe -- it doesn't bake it.
+
+## Evaluating is Baking Part 2
+
+Now that we have saved our recipe, let's bake it. Again, I will alias the `rlang:::eval_tidy` function as `bake` so that I can extend the metaphor into the code. Again, this would work equally well with base `eval` or `rlang::eval_bare` because we aren't using any fancy features yet.
+
+```{r}
+bake <- eval
+
+cake2 <- bake(cake_recipe)
+
+cake2
+```
+
+While we are at it, let's do frosting.
+
+```{r}
+frosting_recipe <- recipe(sugar + butter + vanilla + milk)
+
+frosting_recipe
+
+frosting <- bake(frosting_recipe)
+```
+
+We got an error when we tried to 'bake' the frosting because we didn't put any butter in the pantry. But note that writing down the recipe completed successfully! I mean, obviously, right? You don't need to actually have butter in the pantry in order to write down a recipe that involves butter. But you **DO** need butter when you want to bake that recipe.
+
+## NSE functions are your Friend that wants the Recipe
+
+So what can you do with the recipe other than bake it? You can pass it around. R has lots of special functions that are expecting to work on a combination of regular objects and expressions. For example, let's imagine you have a friend that has the ingredients for the frosting in their pantry. So you give them the cake you baked, along with the recipe for the frosting, and they give you back a fully frosted cake.
+
+```{r}
+
+friend <- function(cake, frosting_recipe) {
+  #pantry
+  sugar <- 87
+  vanilla <- 10
+  butter <- 60
+  milk  <- 30
+  
+  frosting <- bake(frosting_recipe)
+  frosted_cake <- cake + frosting
+}
+
+my_birthday_cake <- friend(cake, frosting_recipe)
+
+objects()
+
+```
+
+Note that now we have a birthday cake, but we still don't have any milk or vanilla in our environment, even though those were necessary to evaluate the `frosting_recipe` expression. That's because those are in the environment of the `friend` function, not the global environment. (Remember: in this extended metaphor, the Environment is the Pantry. Your friend's pantry is not the same as your pantry.) (Apologies, I know I am pushing this comparison hard.)
+
+Dplyr functions are functions that work on a combination of regular objects and expressions. The `data` argument is a regular object, but most of the others are expressions, not regular objects. You don't feel like you are passing in an expression because these functions use tricks to capture the expression you type even though you didn't explicitly write it down as a recipe. But I think this is a useful way to think about it.
+
+## Back to the Meta Recipe
+
+The higher-level birthday cake recipe is to make a cake, make some frosting, combine them and put a candle on top.
+
+```{r}
+birthday_cake_recipe <- recipe((cake_recipe) + (frosting_recipe) + candle)
+
+birthday_cake_recipe
+```
+
+Your other friend loved the cake and wants the recipe. For debugging convenience to understand what a function is 'seeing', let's write `friend2` in a way that simple prints out the recipe.
+
+```{r}
+friend2 <- function(a_recipe){
+  print("Friend2 says... the recipe is: ")
+  print(a_recipe)
+  invisible(a_recipe)
+}
+
+friend2(birthday_cake_recipe)
+```
+
+If your friend actually wanted to make this cake, this would be very unsatisfying. How do you make the frosting? How do you make the cake? Let's re-write this recipe, including the sub-recipes.
+
+# Unquoting is Re-Writing a Meta-Recipe, Substituting in Sub-Recipes
+
+We have finally come back to the meta-recipe introduced at the beginning.
+
+[photo again, maybe?]
+
+```{r}
+full_birthday_cake_recipe <- recipe((!!cake_recipe) + (!!frosting_recipe) + candle)
+full_birthday_cake_recipe
+```
+
+We have rewritten the recipe to include all the details on how to make the components. So now our friend wants to actually make it. We have finished our basic task. But there's a twist! Notice that both the `cake_recipe` and the `frosting_recipe` include `sugar`. But it isn't the same sugar. If we were actually reading the recipe in a recipe book, there would have been context to show that the sugar for the frosting is *powdered sugar* whereas the cake uses the special sauce of `quo()` and `eval_tidy()`.
+
+## `quote()` v. `quo()` v. `expr()`: Which Pantry to Look In
+
+To play out this example, we are going to start over, and distribute the task of making this cake to several friends. Friend1 has the necessary ingredients for the cake, Friend2 has the ingredients for the frosting, and the global environment has the candle.
+
+```{r}
+#starting over, so please clear the environment
+rm(list = ls())
+library(rlang)
+
+friend1 <- function(){
+  flour <- 20
+  eggs  <- 50
+  sugar <- 72
+  
+  cake_recipe_quo   <-   quo(flour + eggs + sugar)
+  cake_recipe_expr  <-  expr(flour + eggs + sugar)
+  cake_recipe_quote <- quote(flour + eggs + sugar)
+
+  return(list(quo   = cake_recipe_quo, 
+              expr  = cake_recipe_expr,
+              quote = cake_recipe_quote))
+}
+
+friend2 <- function(){
+  sugar <- 87
+  vanilla <- 10
+  butter <- 60
+  milk  <- 30
+  
+  frosting_recipe_quo   <-   quo(sugar + vanilla + butter + milk)
+  frosting_recipe_expr  <-  expr(sugar + vanilla + butter + milk)
+  frosting_recipe_quote <- quote(sugar + vanilla + butter + milk)
+  
+  return(list(quo   = frosting_recipe_quo, 
+              expr  = frosting_recipe_expr,
+              quote = frosting_recipe_quote))
+}
+
+candle <- 0
+cake_recipes     <- friend1()
+frosting_recipes <- friend2()
+```
+
+The three versions **look** similar, but they have different scoping characteristics when we try to bake them.
+
+```{r}
+bake <- eval_tidy
+
+bake(cake_recipes$quo)
+```
+
+The reason `quo` works here is that the quosure is not *just* the expression -- it also carries along information about the environment in which it was created ("lexical scoping"). The version `cake_recipes$quo` was created inside the friend1 function, where the ingredients are also defined. So it works fine.
+
+```{r}
+bake(cake_recipes$expr)
+```
+
+This variation gives an error because `expr` just creates a bare expression without any information about where to look for the ingredients. So when it is evaluated at the top level, R looks for `flour` in the global environment and doesn't find it.
+
+```{r}
+bake(cake_recipes$quote)
+
+```
+
+Similar problem here -- R doesn't look in the right place for the ingredients.
+
+To finish everything off, let's show that we can not only rewrite a recipe for the full cake, but also pass the recipe to a third friend which doesn't have ANY ingredients in its local environment, but nonetheless that friend can evaluate the quosure.
+
+```{r}
+birthday_cake_recipe <- quo((!!cake_recipes$quo) + (!!frosting_recipes$quo) + candle)
+print("The recipe is:")
+birthday_cake_recipe
+
+friend3 <- function(a_quosure){
+  birthday_cake <- eval_tidy(a_quosure)
+}
+
+my_birthday_cake <- friend3(birthday_cake_recipe)
+print("This is the actual cake, in terms of calories:")
+my_birthday_cake
+```
+

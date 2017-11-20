@@ -1,0 +1,61 @@
+---
+title: 'Links #2'
+author: Jameel
+date: '2017-05-13'
+slug: links-2
+categories:
+  - Links
+tags:
+  - Links
+  - R
+---
+
+### Conferences I didn't go to
+
+[OpenVisConf Videos are up](https://openvisconf.com/#videos)
+
+Are csvconf videos coming?
+
+When will 
+
+And all the [Rstudio conference videos], of course (I've watched about half at this point)
+
+
+### Meta
+
+[Another R blog how-to](https://github.com/rladies/meetup-presentations_london/tree/master/2017-04-26_Make_your_own_blog?utm_content=buffereae01&utm_medium=social&utm_source=twitter.com&utm_campaign=buffer)
+
+How to get a theme?
+
+How to get a domain name?
+
+Why do the cool kids use github.io?
+
+Or maybe the cool kids use Rbind?
+
+
+### Great Sports Writing
+
+[Dion Waiters](https://www.theplayerstribune.com/dion-waiters-miami-heat-nba-is-lucky/) on life and confidence.
+
+[Richard Sherman knows athletes are real people that come from real places](http://mmqb.si.com/2014/04/02/richard-sherman-desean-jackson)
+
+[Just Cheer, Baby](http://www.espn.com/espn/feature/story/_/id/10702976/just-cheer-baby-lacy-t-sues-oakland-raiders) by Amanda Hess on the life of cheerleaders. (an example of negative wages)
+
+[Kobe's goodbye letter](https://www.theplayerstribune.com/dear-basketball/)
+
+
+### Data
+
+Prison policy
+
+Fivethirtyeight data: http://www.storybench.org/how-to-explore-a-dataset-from-the-fivethirtyeight-package-in-r/?utm_content=buffer107f3&utm_medium=social&utm_source=twitter.com&utm_campaign=buffer
+
+All the data scraping by Anthony Damico: https://github.com/ajdamico/asdfree
+
+
+### Challenges
+
+[Hadley's Stanford Data Challenge Lab Curriculum](https://dcl-2017-04.github.io/curriculum/)
+
+[Project Euler](https://projecteuler.net/)

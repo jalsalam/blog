@@ -1,0 +1,48 @@
+---
+title: Do it With Quasi-Quotation
+author: Jameel Alsalam
+date: '2017-11-20'
+slug: quasi-quotation-applications
+draft: true
+categories:
+  - quasiquotation
+tags:
+  - rlang
+---
+
+_This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post shows some useful things you can actually do with these tools without attempting to explain what's going on. The companion post tries to establish a mental model for quasi-quotation by analogy to a meta-recipe for cake._
+
+_The R language has a powerful set of features for manipulating expressions which has recently been extended by the tidyverse team in the rlang package. I am really excited about the power and generality of quasi-quotation, especially in the realms of higher-order functions and creating unique function APIs. That said, I would recommend R users feel very comfortable with functions and functional programming (e.g., `apply` and/or `map` families of functions) before attempting quasi-quotation._
+
+So you've already made an initial attempt to learn quasi-quotation/tidy evaluation, and the hill to understanding these tools still looks high. You are asking "why bother?", and tempted to just stick with what you know until forced, kicking-and-screaming to do it the "new way." In the following I will try to provide some quick wins and also show a taste of the power of quasi-quotation.
+
+```{r setup}
+suppressPackageStartupMessages(library("tidyverse"))
+library("rlang")
+```
+
+
+## Recode LOTS of values, with Quasi-Quotation
+
+Say you are doing some data cleaning and you decide to try out [`dplyr::recode`](http://dplyr.tidyverse.org/reference/recode.html). The examples in the documentation give a plausible way to change a couple of values:
+
+```{r}
+# Recode values with named arguments
+x <- sample(c("a", "b", "c"), 10, replace = TRUE)
+dplyr::recode(x, a = "Apple")
+```
+
+But wait -- do you really have to manually type in EVERY value that you want to replace?!?! Nope. You need to create a named list, and then use the `!!!` operator (pronounced 'bang bang bang' or unquote-splice).
+
+```{r}
+fruits <- list("Apple", "Banana", "Carrot")
+fruit_lookup <- set_names(fruits, c("a", "b", "c"))
+
+recode(x, !!!fruit_lookup)
+```
+
+
+
+
+
+
