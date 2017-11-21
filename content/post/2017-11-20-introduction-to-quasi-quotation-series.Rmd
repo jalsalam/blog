@@ -8,23 +8,22 @@ categories:
 tags: []
 ---
 
-Recently I have been spending time reading the [draft chapters](https://adv-r.hadley.nz/expressions) in the 2nd Edition Advanced-R book by Hadley Wickham -- specifically the chapters about Expressions, Quotation, Evaluation, and Domain-Specific Languages. These chapters accompany new quasi-quotation and tidy evaluation tools provided in the `rlang` package. I am really excited about these tools. I think they will be very useful for programming with dplyr and shiny, making higher-order functions, and I am excited to try out domain-specific language techniques. I have also read some skepticism about them being too complicated or difficult to understand, and so I wanted to make my own attempt to show why they are worth learning.
+Recently I have been spending time reading the [draft chapters](https://adv-r.hadley.nz/expressions) in the 2nd Edition Advanced-R book by Hadley Wickham -- specifically the chapters about Expressions, Quotation, Evaluation, and Domain-Specific Languages. These chapters accompany new quasi-quotation and tidy evaluation tools provided in the `rlang` package. I am really excited about these tools. I think they will be very general and powerful tools for programming with dplyr and shiny, making higher-order functions, and I am excited to try out domain-specific language techniques. I have also read some skepticism about them being too complicated or difficult to understand, and so I wanted to make my own attempt to show why they are worth learning.
 
-1. This Introduction
-2. A [Mental Model](/posts/2017/quasi-quotation-as-meta-recipe/) for Quasi-Quotation
-3. Some Useful [Quasi-Quotation Applications](/posts/2017/quasi-quotation-applications/)
-
-
-About Me:
-
-As a caveat, I am no expert. I've been using R for 2 years, but haven't written lots of functions using these quotatino tools or anything. I have taught myself a lot about them in writing these posts, in fact! If you want the authoritative version, check out the vignette on [programming in dplyr](http://dplyr.tidyverse.org/articles/programming.html) and Advanced-R.
-
-Who Quasi-Quotation is For:
-
-There has been discussion about whether quasi-quotation and tidy evaluation tools are more for package authors than they are for people just trying to do some data wrangling. For me, understanding quasi-quotation has corresponded to a deeper understanding of how R works. This has been fun and valuable for me. That said, I understand that may sound daunting to some people. I would recommend learning quasi-quotation to people who are already very comfortable writing functions and using the 
+1. This post is an introduction to the series (so I can eliminate throat-clearing from the posts)
+2. If you are having trouble picturing what is going on, I tried to develop an [Analogy for Quasi-Quotation](//posts/2017/quasi-quotation-as-meta-recipe/) that might help with a mental model
+3. If you are just looking to accomplish something, I wrote down some [Quasi-Quotation Applications](//posts/2017/quasi-quotation-applications/)
 
 
-_This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post tries to establish a mental model for quasi-quotation. The [companion post](/posts/2017/quasi-quotation-applications/) shows some useful things you can actually do with these tools._
+### About Me:
 
-_The R language has a powerful set of features for manipulating expressions which has recently been extended by the tidyverse team in the rlang package. I am really excited about the power and generality of quasi-quotation, especially in the realms of higher-order functions and creating unique function APIs. That said, I would recommend R users feel very comfortable with functions and functional programming (e.g., `apply` and/or `map` families of functions) before attempting quasi-quotation._
+As a caveat, I am no expert in these tools. I've been using R for 2 years, but haven't written lots of functions using these quotatino tools or anything. I have taught myself a lot about them in writing these posts, in fact! If you want the authoritative version, check out the vignette on [programming in dplyr](http://dplyr.tidyverse.org/articles/programming.html) and Advanced-R.
+
+### Who Quasi-Quotation is For:
+
+There has been discussion about whether quasi-quotation and tidy evaluation tools are more for package authors than they are for people just trying to do some data wrangling. For me, understanding quasi-quotation has corresponded to a deeper understanding of how R works. This has been fun and valuable for me. That said, I understand that some people aren't interested in that. I would recommend learning quasi-quotation to people who are already very comfortable writing functions and using higher-order functions like the `apply` and `purrr::map` families of functions. I think quasi-quotation tools have some similar features to higher-order functions (although more general).
+
+### Something Old, Something New:
+
+I come to all of this through the tidyverse and the Advanced-R book. But R has always had quotation and meta-programming tools. I am unqualified to do a full comparison. For example, I'm not sure if base R has quasi-quotation features. I think that tidy evaluation with rlang provides something new, but again there are analogies to lisp and to the past. One big improvement in the R language versus S was giving R functions lexical scoping ([see here](https://www.stat.auckland.ac.nz/~ihaka/downloads/lexical.pdf)). I'm no expert, but it looks to me like  `rlang::eval_tidy` gives R expressions (really quosures) lexical scoping as well.
 
