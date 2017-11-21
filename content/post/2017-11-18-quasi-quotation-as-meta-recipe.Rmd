@@ -9,7 +9,7 @@ tags:
   - rlang
 ---
 
-_This post is one of a series of posts that I am doing about quasi-quotation in R. This post tries to explain quasi-quotation by analogy. Other posts in the series currently are the [series introduction](//posts/2017/intro-quasi-quotation-series/) and [quasi-quotation applications](//posts/2017/quasi-quotation-applications/)._
+_This post is one of a series of posts that I am doing about quasi-quotation in R. This post tries to explain quasi-quotation by analogy. Other posts in the series currently are the [series introduction](/posts/2017/intro-quasi-quotation-series/) and [quasi-quotation applications](/posts/2017/quasi-quotation-applications/)._
 
 **Warning**: Embarking on an extended analogy wherein the quasi-quotation tools in base R and the rlang package are compared to a recipes.
 

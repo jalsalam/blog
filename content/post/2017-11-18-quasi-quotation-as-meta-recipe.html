@@ -11,7 +11,7 @@ tags:
 
 
 
-<p><em>This post is one of a series of posts that I am doing about quasi-quotation in R. This post tries to explain quasi-quotation by analogy. Other posts in the series currently are the <a href="//posts/2017/intro-quasi-quotation-series/">series introduction</a> and <a href="//posts/2017/quasi-quotation-applications/">quasi-quotation applications</a>.</em></p>
+<p><em>This post is one of a series of posts that I am doing about quasi-quotation in R. This post tries to explain quasi-quotation by analogy. Other posts in the series currently are the <a href="/posts/2017/intro-quasi-quotation-series/">series introduction</a> and <a href="/posts/2017/quasi-quotation-applications/">quasi-quotation applications</a>.</em></p>
 <p><strong>Warning</strong>: Embarking on an extended analogy wherein the quasi-quotation tools in base R and the rlang package are compared to a recipes.</p>
 <p>Consider the following interesting recipe:</p>
 <div class="figure">
@@ -174,12 +174,12 @@ frost_it(cake, frosting_recipe = sugar + butter + vanilla + milk)</code></pre>
 <div id="wrapping-up" class="section level2">
 <h2>Wrapping Up</h2>
 <p>This analogy probably doesn’t capture everything, but I think it has helped me understand better what is going on with quasi-quotation, and hopefully it will help others. One thing that I have found confusing is the distinction between evaluation and unquoting. Importantly, you only use the unquoting operator <code>!!</code> inside of quoting functions (like <code>expr</code>, <code>quo</code>, or … “recipe”) because it is for re-writing recipes. The end product will be another recipe (expression). By contrast, evaluating will result in a normal value – a cake!</p>
-<pre><code>## -- Attaching packages --------------------------------------- tidyverse 1.2.1 --</code></pre>
+<pre><code>## -- Attaching packages ------------------------------------------------------------- tidyverse 1.2.1 --</code></pre>
 <pre><code>## v ggplot2 2.2.1     v purrr   0.2.4
 ## v tibble  1.3.4     v dplyr   0.7.4
 ## v tidyr   0.7.2     v stringr 1.2.0
 ## v readr   1.1.1     v forcats 0.2.0</code></pre>
-<pre><code>## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+<pre><code>## -- Conflicts ---------------------------------------------------------------- tidyverse_conflicts() --
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()</code></pre>
 <pre><code>## # A tibble: 5 x 3
