@@ -13,6 +13,26 @@ categories:
 
 
 <pre class="r"><code>knitr::opts_chunk$set(error = TRUE)</code></pre>
+<div id="nse-functions-are-your-friend-that-wants-the-recipe" class="section level2">
+<h2>NSE functions are your Friend that wants the Recipe</h2>
+<p>So what can you do with the recipe other than bake it? You can pass it around. R has lots of special functions that are expecting to work on a combination of regular objects and expressions. For example, let’s imagine you have a friend that has the ingredients for the frosting in their pantry. So you give them the cake you baked, along with the recipe for the frosting, and they give you back a fully frosted cake.</p>
+<pre class="r"><code># friend &lt;- function(cake, frosting_recipe) {
+#   #pantry
+#   sugar &lt;- 87
+#   vanilla &lt;- 10
+#   butter &lt;- 60
+#   milk  &lt;- 30
+#   
+#   frosting &lt;- bake(frosting_recipe)
+#   frosted_cake &lt;- cake + frosting
+# }
+# 
+# my_birthday_cake &lt;- friend(cake, frosting_recipe)
+# 
+# objects()</code></pre>
+<p>Note that now we have a birthday cake, but we still don’t have any milk or vanilla in our environment, even though those were necessary to evaluate the <code>frosting_recipe</code> expression. That’s because those are in the environment of the <code>friend</code> function, not the global environment. (Remember: in this extended metaphor, the Environment is the Pantry. Your friend’s pantry is not the same as your pantry.) (Apologies, I know I am pushing this comparison hard.)</p>
+<p>Dplyr functions are functions that work on a combination of regular objects and expressions. The <code>data</code> argument is a regular object, but most of the others are expressions, not regular objects. You don’t feel like you are passing in an expression because these functions use tricks to capture the expression you type even though you didn’t explicitly write it down as a recipe. But I think this is a useful way to think about it.</p>
+</div>
 <div id="quote-v.-quo-v.-expr-which-pantry-to-look-in" class="section level2">
 <h2><code>quote()</code> v. <code>quo()</code> v. <code>expr()</code>: Which Pantry to Look In</h2>
 <p>To play out this example, we are going to start over, and distribute the task of making this cake to several friends. Friend1 has the necessary ingredients for the cake, Friend2 has the ingredients for the frosting, and the global environment has the candle.</p>
