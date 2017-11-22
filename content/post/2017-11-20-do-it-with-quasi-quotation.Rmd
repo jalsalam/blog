@@ -14,17 +14,17 @@ _This post is one of a series of posts that I am doing about expressions, quasi-
 
 So you've already made an initial attempt to learn quasi-quotation/tidy evaluation, and the hill to understanding these tools still looks high. You are asking "why bother?", and tempted to just stick with what you know until forced, kicking-and-screaming to do it the "new way." In the following I will try to provide some quick wins and also show a taste of the power of quasi-quotation.
 
-![air quotes](https://media.giphy.com/media/qs6ev2pm8g9dS/giphy.gif)
+![](https://media.giphy.com/media/qs6ev2pm8g9dS/giphy.gif)
 
 ```{r setup}
 suppressPackageStartupMessages(library("tidyverse"))
-library("rlang")
+suppressPackageStartupMessages(library("rlang"))
 ```
 
 
-## Recode LOTS of values, with Quasi-Quotation
+## 1) Recode LOTS of values, with Quasi-Quotation
 
-Say you are doing some data cleaning and you decide to try out [`dplyr::recode`](http://dplyr.tidyverse.org/reference/recode.html). The examples in the documentation give a plausible way to change a couple of values:
+My first practical use of these tools was to apply a large number of replacements with `recode`. If you are only replacing a couple of values, it is easy to type the replacements into the `recode` call:
 
 ```{r}
 # Recode values with named arguments
@@ -41,11 +41,124 @@ fruit_lookup <- set_names(fruits, c("a", "b", "c"))
 recode(x, !!!fruit_lookup)
 ```
 
-Note: I think this used to work with a named character vector, but now `!!!`/`UQS()` only works with lists, so you make it a list. 
+It needs to be a named list (not a vector) because `UQS()`/`!!!` just works on lists. For the purpose of the example I wrote out the lookup, but its easy to make it from a dataframe, for example like:
 
-I find the term "splice" confusing -- something to do with DNA? I want to find an animation to demonstrate what splicing means, but I haven't found it yet. In the mean time, just know that you can pass a named list to `recode` lots of values. This was my first practical use of the `rlang` tools.
+```{r}
+fruit_lookup2 <- set_names(fruits, str_to_lower(str_sub(fruits, 1, 1))) %>% as.list()
+```
 
 
+## 2) Don't Repeat Yourself, with Quasi-Quotation
+
+In the course of a data analysis script, I frequently find myself doing repeated group-by operations by the same or a similar set of variables several times. If I add a variable to the main dataset early on, I then have to update the list of group-by variables in many places.
+
+```{r}
+suppressPackageStartupMessages(library("tidyverse"))
+
+mpg2 <- mpg %>%
+  group_by(class, manufacturer, model) %>%
+  mutate(max_cty = max(cty),
+         max_hwy = max(hwy)) %>%
+  ungroup()
+
+# ....
+
+mpg3 <- mpg2 %>%
+  group_by(class, manufacturer, model) %>%
+  mutate(mpg_ratio = hwy / cty) %>%
+  ungroup()
+
+# ...
+
+mpg4 <- mpg3 %>%
+  group_by(class, manufacturer, model) %>%
+  # some other calculation
+  ungroup()
+  
+```
+
+You know when you repeat something three times your supposed to write a function. But you haven't totally figured out how to program with dplyr yet, and in any case its not obvious that you really have a function worth factoring out. Instead of writing a function, you can instead replace just the repeated set of `group_by` variables.
+
+```{r}
+suppressPackageStartupMessages(library("rlang"))
+
+group_vars <- syms(c("class", "manufacturer", "model"))
+
+mpg2 <- mpg %>%
+  group_by(!!!group_vars) %>%
+  mutate(max_cty = max(cty),
+         max_hwy = max(hwy)) %>%
+  ungroup()
+
+# ....
+
+mpg3 <- mpg2 %>%
+  group_by(!!!group_vars) %>%
+  mutate(mpg_ratio = hwy / cty) %>%
+  ungroup()
+
+# ...
+
+mpg4 <- mpg3 %>%
+  group_by(!!!group_vars) %>%
+  # some other calculation
+  ungroup()
+```
+
+Now if you need to change the grouping variables, you only have to do it in one place. Also, this is a big step towards writing that function.
+
+
+## 3) Switch the Analysis Variables in a Shiny App, with Quasi-Quotation
+
+Shiny apps used for exploratory plotting commonly want to take the name of variables from the user, and be able to make plots cut by that inputs. Shiny inputs will give a string, which can be turned into a symbol with `sym` and then used in your `dplyr` analysis with `!!`.
+
+```{r, eval=FALSE}
+# app.R - a simple one-fil app
+library("tidyverse")
+
+ui <- bootstrapPage(
+  selectInput("group_var", "Group variable", choices = c("manufacturer", "model", "displ", "class") ),
+  plotOutput('plot')
+)
+
+
+# Define the server code
+server <- function(input, output) {
+  
+  output$plot <- renderPlot({
+    group_var <- input$group_var %>% sym()
+    
+    df <- mpg %>%
+      group_by(!!group_var) %>%
+      summarize(cty = mean(cty),
+                hwy = mean(hwy)) 
+    
+    ggplot(df, aes_string(x = "cty", y = "hwy", label = input$group_var)) +
+      geom_text()
+  })
+}
+
+# Return a Shiny app object
+shinyApp(ui = ui, server = server)
+```
+
+Right now you need to use `!!` for `dplyr`/`tidyr` whereas `ggplot2` uses `aes_` and `aes_string`. My understanding is that ggplot2 will also be switchinig over to the rlang quasi-quotation system at some point as well.
+
+**TODO: Put this on shinyapps.io or Digital Ocean**
+
+## 4) Debug Higher-Order Functions, With Quasi-Quotation
+
+Debugging higher-order functions because 
+
+## 5) Write Custom Higher-Order Functions (!?!), With Quasi-Quotation
+
+Quasi-quotation tools are great for writing higher-order functions. As a warm-up, let's write a basic version of the `map` function that evaluates an expression.
+
+```{r eval=FALSE}
+basic_map <- function(.x, .f) {
+  .f <- as_function(.f)
+}
+```
 
 
 

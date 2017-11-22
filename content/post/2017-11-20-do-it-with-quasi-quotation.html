@@ -15,36 +15,120 @@ tags:
 <p><em>This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post shows some useful things you can actually do with these tools without attempting to explain what’s going on. The <a href="/posts/2017/quasi-quotation-as-meta-recipe/">companion post</a> tries to establish a mental model for quasi-quotation by analogy to a meta-recipe for cake.</em></p>
 <p>So you’ve already made an initial attempt to learn quasi-quotation/tidy evaluation, and the hill to understanding these tools still looks high. You are asking “why bother?”, and tempted to just stick with what you know until forced, kicking-and-screaming to do it the “new way.” In the following I will try to provide some quick wins and also show a taste of the power of quasi-quotation.</p>
 <div class="figure">
-<img src="https://media.giphy.com/media/qs6ev2pm8g9dS/giphy.gif" alt="air quotes" />
-<p class="caption">air quotes</p>
+<img src="https://media.giphy.com/media/qs6ev2pm8g9dS/giphy.gif" />
+
 </div>
 <pre class="r"><code>suppressPackageStartupMessages(library(&quot;tidyverse&quot;))
-library(&quot;rlang&quot;)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;rlang&#39;</code></pre>
-<pre><code>## The following objects are masked from &#39;package:purrr&#39;:
-## 
-##     %@%, %||%, as_function, flatten, flatten_chr, flatten_dbl,
-##     flatten_int, flatten_lgl, invoke, list_along, modify, prepend,
-##     rep_along, splice</code></pre>
-<pre><code>## The following object is masked from &#39;package:tibble&#39;:
-## 
-##     has_name</code></pre>
+suppressPackageStartupMessages(library(&quot;rlang&quot;))</code></pre>
 <div id="recode-lots-of-values-with-quasi-quotation" class="section level2">
-<h2>Recode LOTS of values, with Quasi-Quotation</h2>
-<p>Say you are doing some data cleaning and you decide to try out <a href="http://dplyr.tidyverse.org/reference/recode.html"><code>dplyr::recode</code></a>. The examples in the documentation give a plausible way to change a couple of values:</p>
+<h2>1) Recode LOTS of values, with Quasi-Quotation</h2>
+<p>My first practical use of these tools was to apply a large number of replacements with <code>recode</code>. If you are only replacing a couple of values, it is easy to type the replacements into the <code>recode</code> call:</p>
 <pre class="r"><code># Recode values with named arguments
 x &lt;- sample(c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;), 10, replace = TRUE)
 dplyr::recode(x, a = &quot;Apple&quot;)</code></pre>
-<pre><code>##  [1] &quot;c&quot;     &quot;c&quot;     &quot;b&quot;     &quot;Apple&quot; &quot;b&quot;     &quot;b&quot;     &quot;c&quot;     &quot;b&quot;    
-##  [9] &quot;b&quot;     &quot;c&quot;</code></pre>
+<pre><code>##  [1] &quot;b&quot;     &quot;b&quot;     &quot;b&quot;     &quot;b&quot;     &quot;c&quot;     &quot;Apple&quot; &quot;b&quot;     &quot;c&quot;    
+##  [9] &quot;c&quot;     &quot;c&quot;</code></pre>
 <p>But wait – do you really have to manually type in EVERY value that you want to replace?!?! Nope. You need to create a named list, and then use the <code>!!!</code> operator (pronounced ‘bang bang bang’ or unquote-splice).</p>
 <pre class="r"><code>fruits &lt;- list(&quot;Apple&quot;, &quot;Banana&quot;, &quot;Carrot&quot;)
 fruit_lookup &lt;- set_names(fruits, c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;))
 
 recode(x, !!!fruit_lookup)</code></pre>
-<pre><code>##  [1] &quot;Carrot&quot; &quot;Carrot&quot; &quot;Banana&quot; &quot;Apple&quot;  &quot;Banana&quot; &quot;Banana&quot; &quot;Carrot&quot;
-##  [8] &quot;Banana&quot; &quot;Banana&quot; &quot;Carrot&quot;</code></pre>
-<p>Note: I think this used to work with a named character vector, but now <code>!!!</code>/<code>UQS()</code> only works with lists, so you make it a list.</p>
-<p>I find the term “splice” confusing – something to do with DNA? I want to find an animation to demonstrate what splicing means, but I haven’t found it yet. In the mean time, just know that you can pass a named list to <code>recode</code> lots of values. This was my first practical use of the <code>rlang</code> tools.</p>
+<pre><code>##  [1] &quot;Banana&quot; &quot;Banana&quot; &quot;Banana&quot; &quot;Banana&quot; &quot;Carrot&quot; &quot;Apple&quot;  &quot;Banana&quot;
+##  [8] &quot;Carrot&quot; &quot;Carrot&quot; &quot;Carrot&quot;</code></pre>
+<p>It needs to be a named list (not a vector) because <code>UQS()</code>/<code>!!!</code> just works on lists. For the purpose of the example I wrote out the lookup, but its easy to make it from a dataframe, for example like:</p>
+<pre class="r"><code>fruit_lookup2 &lt;- set_names(fruits, str_to_lower(str_sub(fruits, 1, 1))) %&gt;% as.list()</code></pre>
+</div>
+<div id="dont-repeat-yourself-with-quasi-quotation" class="section level2">
+<h2>2) Don’t Repeat Yourself, with Quasi-Quotation</h2>
+<p>In the course of a data analysis script, I frequently find myself doing repeated group-by operations by the same or a similar set of variables several times. If I add a variable to the main dataset early on, I then have to update the list of group-by variables in many places.</p>
+<pre class="r"><code>suppressPackageStartupMessages(library(&quot;tidyverse&quot;))
+
+mpg2 &lt;- mpg %&gt;%
+  group_by(class, manufacturer, model) %&gt;%
+  mutate(max_cty = max(cty),
+         max_hwy = max(hwy)) %&gt;%
+  ungroup()
+
+# ....
+
+mpg3 &lt;- mpg2 %&gt;%
+  group_by(class, manufacturer, model) %&gt;%
+  mutate(mpg_ratio = hwy / cty) %&gt;%
+  ungroup()
+
+# ...
+
+mpg4 &lt;- mpg3 %&gt;%
+  group_by(class, manufacturer, model) %&gt;%
+  # some other calculation
+  ungroup()</code></pre>
+<p>You know when you repeat something three times your supposed to write a function. But you haven’t totally figured out how to program with dplyr yet, and in any case its not obvious that you really have a function worth factoring out. Instead of writing a function, you can instead replace just the repeated set of <code>group_by</code> variables.</p>
+<pre class="r"><code>suppressPackageStartupMessages(library(&quot;rlang&quot;))
+
+group_vars &lt;- syms(c(&quot;class&quot;, &quot;manufacturer&quot;, &quot;model&quot;))
+
+mpg2 &lt;- mpg %&gt;%
+  group_by(!!!group_vars) %&gt;%
+  mutate(max_cty = max(cty),
+         max_hwy = max(hwy)) %&gt;%
+  ungroup()
+
+# ....
+
+mpg3 &lt;- mpg2 %&gt;%
+  group_by(!!!group_vars) %&gt;%
+  mutate(mpg_ratio = hwy / cty) %&gt;%
+  ungroup()
+
+# ...
+
+mpg4 &lt;- mpg3 %&gt;%
+  group_by(!!!group_vars) %&gt;%
+  # some other calculation
+  ungroup()</code></pre>
+<p>Now if you need to change the grouping variables, you only have to do it in one place. Also, this is a big step towards writing that function.</p>
+</div>
+<div id="switch-the-analysis-variables-in-a-shiny-app-with-quasi-quotation" class="section level2">
+<h2>3) Switch the Analysis Variables in a Shiny App, with Quasi-Quotation</h2>
+<p>Shiny apps used for exploratory plotting commonly want to take the name of variables from the user, and be able to make plots cut by that inputs. Shiny inputs will give a string, which can be turned into a symbol with <code>sym</code> and then used in your <code>dplyr</code> analysis with <code>!!</code>.</p>
+<pre class="r"><code># app.R - a simple one-fil app
+library(&quot;tidyverse&quot;)
+
+ui &lt;- bootstrapPage(
+  selectInput(&quot;group_var&quot;, &quot;Group variable&quot;, choices = c(&quot;manufacturer&quot;, &quot;model&quot;, &quot;displ&quot;, &quot;class&quot;) ),
+  plotOutput(&#39;plot&#39;)
+)
+
+
+# Define the server code
+server &lt;- function(input, output) {
+  
+  output$plot &lt;- renderPlot({
+    group_var &lt;- input$group_var %&gt;% sym()
+    
+    df &lt;- mpg %&gt;%
+      group_by(!!group_var) %&gt;%
+      summarize(cty = mean(cty),
+                hwy = mean(hwy)) 
+    
+    ggplot(df, aes_string(x = &quot;cty&quot;, y = &quot;hwy&quot;, label = input$group_var)) +
+      geom_text()
+  })
+}
+
+# Return a Shiny app object
+shinyApp(ui = ui, server = server)</code></pre>
+<p>Right now you need to use <code>!!</code> for <code>dplyr</code>/<code>tidyr</code> whereas <code>ggplot2</code> uses <code>aes_</code> and <code>aes_string</code>. My understanding is that ggplot2 will also be switchinig over to the rlang quasi-quotation system at some point as well.</p>
+<p><strong>TODO: Put this on shinyapps.io or Digital Ocean</strong></p>
+</div>
+<div id="debug-higher-order-functions-with-quasi-quotation" class="section level2">
+<h2>4) Debug Higher-Order Functions, With Quasi-Quotation</h2>
+<p>Debugging higher-order functions because</p>
+</div>
+<div id="write-custom-higher-order-functions-with-quasi-quotation" class="section level2">
+<h2>5) Write Custom Higher-Order Functions (!?!), With Quasi-Quotation</h2>
+<p>Quasi-quotation tools are great for writing higher-order functions. As a warm-up, let’s write a basic version of the <code>map</code> function that evaluates an expression.</p>
+<pre class="r"><code>basic_map &lt;- function(.x, .f) {
+  .f &lt;- as_function(.f)
+}</code></pre>
 </div>
