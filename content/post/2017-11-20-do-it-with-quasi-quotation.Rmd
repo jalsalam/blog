@@ -3,7 +3,6 @@ title: Do it With Quasi-Quotation
 author: Jameel Alsalam
 date: '2017-11-20'
 slug: quasi-quotation-applications
-draft: true
 categories:
   - quasiquotation
 tags:
