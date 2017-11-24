@@ -112,7 +112,7 @@ Now if you need to change the grouping variables, you only have to do it in one 
 Shiny apps used for exploratory plotting commonly want to take the name of variables from the user, and be able to make plots cut by that inputs. Shiny inputs will give a string, which can be turned into a symbol with `sym` and then used in your `dplyr` analysis with `!!`.
 
 ```{r, eval=FALSE}
-# app.R - a simple one-fil app
+# app.R - a simple one-file app
 library("tidyverse")
 
 ui <- bootstrapPage(
@@ -141,23 +141,76 @@ server <- function(input, output) {
 shinyApp(ui = ui, server = server)
 ```
 
-Right now you need to use `!!` for `dplyr`/`tidyr` whereas `ggplot2` uses `aes_` and `aes_string`. My understanding is that ggplot2 will also be switchinig over to the rlang quasi-quotation system at some point as well.
 
-**TODO: Put this on shinyapps.io or Digital Ocean**
+```{r, echo=FALSE}
+knitr::include_app("http://www.jalsalam.com/shiny/demo-app-1/", height = "500px")
+```
+
+Right now you need to use `!!` for `dplyr`/`tidyr` whereas `ggplot2` uses `aes_` and `aes_string`. My understanding is that ggplot2 will also be switchinig over to the rlang quasi-quotation system at some point as well.
 
 ## 4) Debug Higher-Order Functions, With Quasi-Quotation
 
 Debugging higher-order functions because 
 
-## 5) Write Custom Higher-Order Functions (!?!), With Quasi-Quotation
+## 5) Write New Higher-Order Functions (!?!), With Quasi-Quotation
 
 Quasi-quotation tools are great for writing higher-order functions. As a warm-up, let's write a basic version of the `map` function that evaluates an expression.
 
-```{r eval=FALSE}
-basic_map <- function(.x, .f) {
-  .f <- as_function(.f)
+```{r}
+library(rlang)
+
+expr_map <- function(.x, .expr, ...) {
+  out <- list()
+
+  for (i in seq_along(.x)) {
+    out[i] <- eval_tidy(.expr, data = dots_list(..., .x = .x[[i]]) )
+  }
+
+  out
+}
+
+
+```
+
+We can write an "anonymouns function" in the form of an expression. We will iterate through a `for` loop for each element of `.x` and evaluate the expression. Really? We can write a version of `map` in 4 lines of code?  There are many reasons why the real one is better, but this one really does accomplish the core pattern, but using expressions instead of functions. Like the real map, you can use `.x` as a pronoun
+
+```{r}
+expr_map(c(1, 2, 3), expr(.x^2))
+```
+
+We can also refer to variables in the environment...
+
+```{r}
+y=5
+
+expr_map(c(1,2,3), expr(.x^2 + y))
+```
+
+And add variables to the overscope with dots, which will be seen ahead of the environment.
+
+```{r}
+y=5
+
+expr_map(c(1, 2, 3), expr(.x^2 + y), y=-1)
+```
+
+The possibilities are sort of endless. For example, it has always annoyed me that when you use a dataframe with pmap, you need to manually match up the columns with ..1, ..2, etc.
+
+```{r}
+expr_pmap <- function(.l, .expr, ...) {
+  out <- list()
+
+  for (i in seq_along(.x)) {
+    out[i] <- eval_tidy(.expr, data = dots_list(..., .x = .x[[i]]) )
+  }
+
+  out
 }
 ```
+
+
+
+
 
 
 

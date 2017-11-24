@@ -25,15 +25,15 @@ suppressPackageStartupMessages(library(&quot;rlang&quot;))</code></pre>
 <pre class="r"><code># Recode values with named arguments
 x &lt;- sample(c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;), 10, replace = TRUE)
 dplyr::recode(x, a = &quot;Apple&quot;)</code></pre>
-<pre><code>##  [1] &quot;c&quot;     &quot;b&quot;     &quot;c&quot;     &quot;c&quot;     &quot;c&quot;     &quot;Apple&quot; &quot;b&quot;     &quot;c&quot;    
-##  [9] &quot;c&quot;     &quot;Apple&quot;</code></pre>
+<pre><code>##  [1] &quot;Apple&quot; &quot;c&quot;     &quot;b&quot;     &quot;Apple&quot; &quot;b&quot;     &quot;c&quot;     &quot;b&quot;     &quot;b&quot;    
+##  [9] &quot;b&quot;     &quot;b&quot;</code></pre>
 <p>But wait – do you really have to manually type in EVERY value that you want to replace?!?! Nope. You need to create a named list, and then use the <code>!!!</code> operator (pronounced ‘bang bang bang’ or unquote-splice).</p>
 <pre class="r"><code>fruits &lt;- list(&quot;Apple&quot;, &quot;Banana&quot;, &quot;Carrot&quot;)
 fruit_lookup &lt;- set_names(fruits, c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;))
 
 recode(x, !!!fruit_lookup)</code></pre>
-<pre><code>##  [1] &quot;Carrot&quot; &quot;Banana&quot; &quot;Carrot&quot; &quot;Carrot&quot; &quot;Carrot&quot; &quot;Apple&quot;  &quot;Banana&quot;
-##  [8] &quot;Carrot&quot; &quot;Carrot&quot; &quot;Apple&quot;</code></pre>
+<pre><code>##  [1] &quot;Apple&quot;  &quot;Carrot&quot; &quot;Banana&quot; &quot;Apple&quot;  &quot;Banana&quot; &quot;Carrot&quot; &quot;Banana&quot;
+##  [8] &quot;Banana&quot; &quot;Banana&quot; &quot;Banana&quot;</code></pre>
 <p>It needs to be a named list (not a vector) because <code>UQS()</code>/<code>!!!</code> just works on lists. For the purpose of the example I wrote out the lookup, but its easy to make it from a dataframe, for example like:</p>
 <pre class="r"><code>fruit_lookup2 &lt;- set_names(fruits, str_to_lower(str_sub(fruits, 1, 1))) %&gt;% as.list()</code></pre>
 </div>
@@ -90,7 +90,7 @@ mpg4 &lt;- mpg3 %&gt;%
 <div id="switch-the-analysis-variables-in-a-shiny-app-with-quasi-quotation" class="section level2">
 <h2>3) Switch the Analysis Variables in a Shiny App, with Quasi-Quotation</h2>
 <p>Shiny apps used for exploratory plotting commonly want to take the name of variables from the user, and be able to make plots cut by that inputs. Shiny inputs will give a string, which can be turned into a symbol with <code>sym</code> and then used in your <code>dplyr</code> analysis with <code>!!</code>.</p>
-<pre class="r"><code># app.R - a simple one-fil app
+<pre class="r"><code># app.R - a simple one-file app
 library(&quot;tidyverse&quot;)
 
 ui &lt;- bootstrapPage(
@@ -117,17 +117,70 @@ server &lt;- function(input, output) {
 
 # Return a Shiny app object
 shinyApp(ui = ui, server = server)</code></pre>
+<iframe src="http://www.jalsalam.com/shiny/demo-app-1/?showcase=0" width="672" height="500px">
+</iframe>
 <p>Right now you need to use <code>!!</code> for <code>dplyr</code>/<code>tidyr</code> whereas <code>ggplot2</code> uses <code>aes_</code> and <code>aes_string</code>. My understanding is that ggplot2 will also be switchinig over to the rlang quasi-quotation system at some point as well.</p>
-<p><strong>TODO: Put this on shinyapps.io or Digital Ocean</strong></p>
 </div>
 <div id="debug-higher-order-functions-with-quasi-quotation" class="section level2">
 <h2>4) Debug Higher-Order Functions, With Quasi-Quotation</h2>
 <p>Debugging higher-order functions because</p>
 </div>
-<div id="write-custom-higher-order-functions-with-quasi-quotation" class="section level2">
-<h2>5) Write Custom Higher-Order Functions (!?!), With Quasi-Quotation</h2>
+<div id="write-new-higher-order-functions-with-quasi-quotation" class="section level2">
+<h2>5) Write New Higher-Order Functions (!?!), With Quasi-Quotation</h2>
 <p>Quasi-quotation tools are great for writing higher-order functions. As a warm-up, let’s write a basic version of the <code>map</code> function that evaluates an expression.</p>
-<pre class="r"><code>basic_map &lt;- function(.x, .f) {
-  .f &lt;- as_function(.f)
+<pre class="r"><code>library(rlang)
+
+expr_map &lt;- function(.x, .expr, ...) {
+  out &lt;- list()
+
+  for (i in seq_along(.x)) {
+    out[i] &lt;- eval_tidy(.expr, data = dots_list(..., .x = .x[[i]]) )
+  }
+
+  out
+}</code></pre>
+<p>We can write an “anonymouns function” in the form of an expression. We will iterate through a <code>for</code> loop for each element of <code>.x</code> and evaluate the expression. Really? We can write a version of <code>map</code> in 4 lines of code? There are many reasons why the real one is better, but this one really does accomplish the core pattern, but using expressions instead of functions. Like the real map, you can use <code>.x</code> as a pronoun</p>
+<pre class="r"><code>expr_map(c(1, 2, 3), expr(.x^2))</code></pre>
+<pre><code>## [[1]]
+## [1] 1
+## 
+## [[2]]
+## [1] 4
+## 
+## [[3]]
+## [1] 9</code></pre>
+<p>We can also refer to variables in the environment…</p>
+<pre class="r"><code>y=5
+
+expr_map(c(1,2,3), expr(.x^2 + y))</code></pre>
+<pre><code>## [[1]]
+## [1] 6
+## 
+## [[2]]
+## [1] 9
+## 
+## [[3]]
+## [1] 14</code></pre>
+<p>And add variables to the overscope with dots, which will be seen ahead of the environment.</p>
+<pre class="r"><code>y=5
+
+expr_map(c(1, 2, 3), expr(.x^2 + y), y=-1)</code></pre>
+<pre><code>## [[1]]
+## [1] 0
+## 
+## [[2]]
+## [1] 3
+## 
+## [[3]]
+## [1] 8</code></pre>
+<p>The possibilities are sort of endless. For example, it has always annoyed me that when you use a dataframe with pmap, you need to manually match up the columns with ..1, ..2, etc.</p>
+<pre class="r"><code>expr_pmap &lt;- function(.l, .expr, ...) {
+  out &lt;- list()
+
+  for (i in seq_along(.x)) {
+    out[i] &lt;- eval_tidy(.expr, data = dots_list(..., .x = .x[[i]]) )
+  }
+
+  out
 }</code></pre>
 </div>
