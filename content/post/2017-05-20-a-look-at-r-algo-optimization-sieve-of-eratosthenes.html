@@ -68,9 +68,9 @@ microbenchmark(
   times = 10
 )</code></pre>
 <pre><code>## Unit: microseconds
-##            expr      min       lq      mean    median       uq       max
-##  sieve_1(10000) 7596.128 7801.073 11794.382 8220.8110 8918.065 36325.386
-##  sieve_2(10000)  154.987  157.174  1102.187  166.1085  187.807  9490.236
+##            expr      min       lq      mean   median        uq      max
+##  sieve_1(10000) 7487.455 8007.842 16901.255 8716.036 17497.713 51967.28
+##  sieve_2(10000)  160.821  163.374  2107.552  200.388   222.086 18588.81
 ##  neval
 ##     10
 ##     10</code></pre>
@@ -97,12 +97,12 @@ microbenchmark(
   times = 10
 )</code></pre>
 <pre><code>## Unit: milliseconds
-##               expr      min       lq     mean   median       uq      max
-##     sieve_1(10000) 7.758771 8.103752 8.471961 8.322191 8.952344 9.570464
-##  sieve_1_v2(10000) 1.750428 2.161414 3.121925 2.673049 2.903522 8.074942
-##  neval
-##     10
-##     10</code></pre>
+##               expr       min       lq      mean    median        uq
+##     sieve_1(10000) 15.632049 17.20051 18.312319 17.693178 18.890762
+##  sieve_1_v2(10000)  3.908924  5.04342  6.462725  5.063113  6.058668
+##       max neval
+##  23.15160    10
+##  16.55321    10</code></pre>
 <p>This minor change has created an improvement of a factor of 3. To explain this, I tracked how many times each one iterates.</p>
 <pre><code>## [1] &quot;sieve_1 iterated 99 times.&quot;</code></pre>
 <pre><code>## [1] &quot;sieve_1_v2 iterated 25 times.&quot;</code></pre>

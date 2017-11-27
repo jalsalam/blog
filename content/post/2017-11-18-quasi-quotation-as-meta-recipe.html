@@ -12,14 +12,14 @@ tags:
 
 
 <p><em>This post is one of a series of posts that I am doing about quasi-quotation in R. This post tries to explain quasi-quotation by analogy. Other posts in the series currently are the <a href="/posts/2017/intro-quasi-quotation-series/">series introduction</a> and <a href="/posts/2017/quasi-quotation-applications/">quasi-quotation applications</a>.</em></p>
-<p><strong>Warning</strong>: Embarking on an extended analogy wherein the quasi-quotation tools in base R and the rlang package are compared to a recipes.</p>
+<p><strong>Warning</strong>: We are embarking on an extended analogy wherein the quasi-quotation tools in base R and the rlang package are compared to recipes.</p>
 <p>Consider the following interesting recipe:</p>
 <div class="figure">
 <img src="/img/meta-cake-recipe.jpg" />
 
 </div>
-<p>Most recipes aren’t like this, but I think most people have seen this kind of thing. I want to call it a “meta-recipe.”</p>
-<p>Notice that there are two fundamentally different types of “ingredients” in this recipe. Chopped butternuts are a normal, basic ingredient, but “White Cake II” is something different. We expect that if we turn to page 636, we will find a recipe for the cake which starts from basic ingredients.</p>
+<p>This recipe references other recipes. Most recipes aren’t like this, but I think most of us have seen this kind of thing. I want to call it a “meta-recipe.”</p>
+<p>There are two fundamentally different types of “ingredients” in this recipe. Chopped butternuts are a normal, basic ingredient, but “White Cake II” is something different. We expect that if we turn to page 636, we will find a recipe for the cake which starts from basic ingredients.</p>
 <p>Now imagine that you made this cake and your friend loved it. He asks for the recipe. If you give him the photo above, it would be fundamentally incomplete. One idea is to rewrite the “Maple Butternut Cake” recipe by copy-and-pasting the sub-recipes for the cake and frosting all into one place, so that we have a single self-contained recipe.</p>
 <p>Doing this rewriting is the essence of the unquote operator in quasi-quotation.</p>
 <p>Before we get to the meta-recipe in code, I want to develop the analogy step-by-step.</p>
@@ -34,7 +34,7 @@ tags:
 </div>
 <div id="the-environment-is-the-pantry" class="section level2">
 <h2>The Environment is the Pantry</h2>
-<p>So first, lets stock the pantry. We will assign these objects with numbers that might represent the number of calories in a serving.</p>
+<p>Lets stock the pantry. We will assign these objects with numbers that might represent the number of calories in a serving.</p>
 <pre class="r"><code>flour &lt;- 20
 eggs  &lt;- 50
 sugar &lt;- 72
@@ -49,14 +49,14 @@ objects()</code></pre>
 
 cake</code></pre>
 <pre><code>## [1] 142</code></pre>
-<p>We’ve got a cake! Apparently it has 142 calories. Not surprising, as cake is very tasty!</p>
+<p>We have a cake! Apparently it has 142 calories. Not surprising, as cake is very tasty!</p>
 </div>
 <div id="the-recipe-versus-the-cake" class="section level2">
 <h2>The Recipe versus the Cake</h2>
 <p>The big idea here is you don’t have to immediately bake the cake. In R there are language features and quotation functions which make it possible to write down recipes and bake them at a later time.</p>
 <p>In service of this extended comparison, I am going to rename my own quoting function <code>recipe</code> as follows:</p>
 <pre class="r"><code>recipe &lt;- rlang::expr</code></pre>
-<p>Note that I am using <code>rlang::expr</code> here, but the basic metaphor is equally applicable to base <code>quote</code> or <code>rlang::quo</code>. The distinction is in which pantry to look in, and I won’t get into that in this post. Remember:</p>
+<p>Note that I am using <code>rlang::expr</code> here, but the basic analogy is equally applicable to base <code>quote</code> or <code>rlang::quo</code>. The distinction is in which pantry to look in, and I won’t get into that in this post. Remember:</p>
 <blockquote>
 <p><strong>The recipe is to the cake as an expression is to the result of evaluating the expression.</strong></p>
 </blockquote>
@@ -65,7 +65,7 @@ cake</code></pre>
 
 cake_recipe</code></pre>
 <pre><code>## flour + sugar + eggs</code></pre>
-<p>Great, now we have the recipe written down. Note that when we type regular code into R, it immediately evaluates it. But when we type <code>cake_recipe</code> into the console it just prints the recipe – it doesn’t bake it. In our code snippets, R objects that represent food, like <code>cake</code> have a numerical value akin to calories, while unevaluated expressions, like <code>cake_recipe</code>, don’t have a numerical value. Recipes don’t have calories – not unless you like eating paper!</p>
+<p>Great, now we have the recipe written down. Note that when we type regular code into R, it immediately evaluates it. But when we type <code>cake_recipe</code> into the console it just prints the recipe – it doesn’t bake it. In our code snippets, R objects that represent food, like <code>cake</code> have a numerical value akin to calories, while unevaluated expressions, like <code>cake_recipe</code>, don’t have a numerical value. Recipes don’t have calories – read as many as you want, but you will still be hungry!</p>
 </div>
 <div id="evaluating-is-baking-part-2" class="section level2">
 <h2>Evaluating is Baking Part 2</h2>
@@ -87,7 +87,7 @@ frosting_recipe</code></pre>
 </div>
 <div id="the-recipe-versus-the-cake-part-2" class="section level2">
 <h2>The Recipe versus the Cake Part 2</h2>
-<p>So what can you do with the expression (recipe) other than evaluate it (bake it)? You can pass it to a function. Imagine you friend really liked the cake and wants the recipe. Giving your friend a cake is very different from giving your friend the <em>recipe</em> for cake.</p>
+<p>So what can you do with the expression (recipe) other than evaluate it (bake it)? You can pass it to a function. Imagine your friend really liked the cake and wants the recipe. Giving your friend a cake is very different from giving your friend the <em>recipe</em> for cake.</p>
 <p>To make it easier to tell what is going on, our friend just prints out whatever you give him.</p>
 <pre class="r"><code>friend &lt;- function(gift) {
   print(gift)
@@ -124,7 +124,7 @@ friend2(flour + sugar + eggs)</code></pre>
 <pre><code>## [1] 142</code></pre>
 <pre class="r"><code>friend2(flour + sugar + eggs)</code></pre>
 <pre><code>## flour + sugar + eggs</code></pre>
-<p>Dplyr functions are functions that work on a combination of regular objects and expressions. The <code>data</code> argument is a regular object, but most of the other arguments use <code>enexpr</code> type tricks to go back and get expressions from you. You don’t feel like you are passing in an expression … but your are.</p>
+<p>Dplyr functions are functions that work on a combination of regular objects and expressions. The <code>data</code> argument is a regular object, but most of the other arguments use <code>enexpr</code> type tricks to go back and get expressions from you. You don’t feel like you are passing in an expression … but you are.</p>
 </div>
 <div id="back-to-the-meta-recipe" class="section level2">
 <h2>Back to the Meta Recipe</h2>
@@ -137,21 +137,20 @@ friend(butternut_cake_recipe)</code></pre>
 </div>
 <div id="unquoting-is-for-re-writing-a-meta-recipe" class="section level2">
 <h2>Unquoting is for Re-Writing a Meta-Recipe</h2>
-<p>This is the core purpose of the unquoting operator in <code>rlang</code>: <code>!!</code> or <code>UQ()</code>. This operator allows us to swap in the sub-recipes (sub-expressions) so that we can re-write a full, complete recipe.</p>
+<p>This is the core purpose of the unquoting operator in <code>rlang</code>: <code>!!</code> or <code>UQ()</code>. This operator allows us to swap in the sub-recipes (sub-expressions) so that we can re-write a full, complete recipe starting from basic ingredients.</p>
 <pre class="r"><code>full_butternut_cake_recipe &lt;- recipe((!!cake_recipe) + butternuts + (!!frosting_recipe))
 
 friend(full_butternut_cake_recipe)</code></pre>
 <pre><code>## (flour + sugar + eggs) + butternuts + (sugar + butter + vanilla + 
 ##     milk)</code></pre>
-<p>Now everything in the full recipe is a basic ingredient. Let’s do this again with our <code>friend2</code>. In this case, it isn’t necessary to explicitly capture the expression with <code>recipe</code> because the <code>friend2</code> function uses <code>enexpr</code> to capture whatever is inside the function call as a recipe (expression).</p>
+<p>Let’s swap in the sub-recipes with <code>friend2</code> as well. In this case, it isn’t necessary to explicitly capture the expression with <code>recipe</code> because the <code>friend2</code> function uses <code>enexpr</code> to capture whatever is inside the function call as a recipe (expression).</p>
 <pre class="r"><code>friend2((!!cake_recipe) + butternuts + (!!frosting_recipe))</code></pre>
 <pre><code>## (flour + sugar + eggs) + butternuts + (sugar + butter + vanilla + 
 ##     milk)</code></pre>
-<p>Again, it doesn’t LOOK like we gave <code>friend2</code> a recipe, but we did.</p>
 </div>
 <div id="putting-the-pieces-together-in-a-dplyr-like-function" class="section level2">
 <h2>Putting the Pieces Together in a Dplyr-Like Function</h2>
-<p>To put it all together, let’s write a function that works like a dplyr-like way. The <code>frost_it</code> function will take one regular object (a cake), and one expression (a recipe for frosting). It will then evaluate the expression, add it to the cake, and evaluate the result. It will use <code>enexpr</code> so that it conceals the expression-nature of the frosting_recipe argument from the user.</p>
+<p>To put it all together, let’s write a function that works in a dplyr-like way. The <code>frost_it</code> function will take one regular object (a cake), and one expression (a recipe for frosting). It will then evaluate the expression, add it to the cake, and return the result. It will use <code>enexpr</code> so that it conceals the expression-nature of the frosting_recipe argument from the user.</p>
 <pre class="r"><code>frost_it &lt;- function(cake, frosting_recipe) {
   frosting_recipe &lt;- rlang::enexpr(frosting_recipe)
   
@@ -173,22 +172,41 @@ frost_it(cake, frosting_recipe = sugar + butter + vanilla + milk)</code></pre>
 </div>
 <div id="wrapping-up" class="section level2">
 <h2>Wrapping Up</h2>
-<p>This analogy probably doesn’t capture everything, but I think it has helped me understand better what is going on with quasi-quotation, and hopefully it will help others. One thing that I have found confusing is the distinction between evaluation and unquoting. Importantly, you only use the unquoting operator <code>!!</code> inside of quoting functions (like <code>expr</code>, <code>quo</code>, or … “recipe”) because it is for re-writing recipes. The end product will be another recipe (expression). By contrast, evaluating will result in a normal value – a cake!</p>
-<pre><code>## -- Attaching packages ------------------------------------------------------------- tidyverse 1.2.1 --</code></pre>
-<pre><code>## v ggplot2 2.2.1     v purrr   0.2.4
-## v tibble  1.3.4     v dplyr   0.7.4
-## v tidyr   0.7.2     v stringr 1.2.0
-## v readr   1.1.1     v forcats 0.2.0</code></pre>
-<pre><code>## -- Conflicts ---------------------------------------------------------------- tidyverse_conflicts() --
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
-<pre><code>## # A tibble: 5 x 3
-##                     `R term`      `Analogy term`
-##                        &lt;chr&gt;               &lt;chr&gt;
-## 1                 Expression              Recipe
-## 2                Environment              Pantry
-## 3                 Evaluation              Baking
-## 4 Quasi-Quotation Expression         Meta-Recipe
-## 5      Unquoting `!!`/`UQ()` Re-writing a Recipe
-## # ... with 1 more variables: Example &lt;chr&gt;</code></pre>
+<p>This analogy probably doesn’t capture everything, but I think it has helped me understand better what is going on with quasi-quotation, and I hope it will help you. One thing that I have found confusing is the distinction between evaluation and unquoting. Importantly, you only use the unquoting operator <code>!!</code> inside of quoting functions (like <code>expr</code>, <code>quo</code>, or … “recipe”) because it is for re-writing recipes. The end product will be another recipe (expression). By contrast, evaluating will result in a normal value – a cake!</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">R term</th>
+<th align="left">Analogy term</th>
+<th align="left">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Expression</td>
+<td align="left">Recipe</td>
+<td align="left">expr(flour + sugar + eggs)</td>
+</tr>
+<tr class="even">
+<td align="left">Environment</td>
+<td align="left">Pantry</td>
+<td align="left">objects() # check objects in the environment</td>
+</tr>
+<tr class="odd">
+<td align="left">Evaluation</td>
+<td align="left">Baking</td>
+<td align="left">eval_tidy(cake_recipe)</td>
+</tr>
+<tr class="even">
+<td align="left">Quasi-Quotation Expression</td>
+<td align="left">Meta-Recipe</td>
+<td align="left">!!cake_recipe + butternuts + !!frosting_recipe</td>
+</tr>
+<tr class="odd">
+<td align="left">Unquoting <code>!!</code>/<code>UQ()</code></td>
+<td align="left">Re-writing a Recipe</td>
+<td align="left">(as above)</td>
+</tr>
+</tbody>
+</table>
 </div>

@@ -11,15 +11,15 @@ tags:
 
 _This post is one of a series of posts that I am doing about quasi-quotation in R. This post tries to explain quasi-quotation by analogy. Other posts in the series currently are the [series introduction](/posts/2017/intro-quasi-quotation-series/) and [quasi-quotation applications](/posts/2017/quasi-quotation-applications/)._
 
-**Warning**: Embarking on an extended analogy wherein the quasi-quotation tools in base R and the rlang package are compared to a recipes.
+**Warning**: We are embarking on an extended analogy wherein the quasi-quotation tools in base R and the rlang package are compared to recipes.
 
 Consider the following interesting recipe:
 
 ![](/img/meta-cake-recipe.jpg)
 
-Most recipes aren't like this, but I think most people have seen this kind of thing. I want to call it a "meta-recipe."
+This recipe references other recipes. Most recipes aren't like this, but I think most of us have seen this kind of thing. I want to call it a "meta-recipe."
 
-Notice that there are two fundamentally different types of "ingredients" in this recipe. Chopped butternuts are a normal, basic ingredient, but "White Cake II" is something different. We expect that if we turn to page 636, we will find a recipe for the cake which starts from basic ingredients.
+There are two fundamentally different types of "ingredients" in this recipe. Chopped butternuts are a normal, basic ingredient, but "White Cake II" is something different. We expect that if we turn to page 636, we will find a recipe for the cake which starts from basic ingredients.
 
 Now imagine that you made this cake and your friend loved it. He asks for the recipe. If you give him the photo above, it would be fundamentally incomplete. One idea is to rewrite the "Maple Butternut Cake" recipe by copy-and-pasting the sub-recipes for the cake and frosting all into one place, so that we have a single self-contained recipe.
 
@@ -47,7 +47,7 @@ objects()
 
 ## The Environment is the Pantry
 
-So first, lets stock the pantry. We will assign these objects with numbers that might represent the number of calories in a serving.
+Lets stock the pantry. We will assign these objects with numbers that might represent the number of calories in a serving.
 
 ```{r}
 flour <- 20
@@ -67,7 +67,7 @@ cake <- flour + sugar + eggs
 cake
 ```
 
-We've got a cake! Apparently it has `r cake` calories. Not surprising, as cake is very tasty!
+We have a cake! Apparently it has `r cake` calories. Not surprising, as cake is very tasty!
 
 ## The Recipe versus the Cake
 
@@ -79,7 +79,7 @@ In service of this extended comparison, I am going to rename my own quoting func
 recipe <- rlang::expr
 ```
 
-Note that I am using `rlang::expr` here, but the basic metaphor is equally applicable to base `quote` or `rlang::quo`. The distinction is in which pantry to look in, and I won't get into that in this post. Remember:
+Note that I am using `rlang::expr` here, but the basic analogy is equally applicable to base `quote` or `rlang::quo`. The distinction is in which pantry to look in, and I won't get into that in this post. Remember:
 
 > **The recipe is to the cake as an expression is to the result of evaluating the expression.**
 
@@ -91,7 +91,7 @@ cake_recipe <- recipe(flour + sugar + eggs)
 cake_recipe
 ```
 
-Great, now we have the recipe written down. Note that when we type regular code into R, it immediately evaluates it. But when we type `cake_recipe` into the console it just prints the recipe -- it doesn't bake it. In our code snippets, R objects that represent food, like `cake` have a numerical value akin to calories, while unevaluated expressions, like `cake_recipe`, don't have a numerical value. Recipes don't have calories -- not unless you like eating paper!
+Great, now we have the recipe written down. Note that when we type regular code into R, it immediately evaluates it. But when we type `cake_recipe` into the console it just prints the recipe -- it doesn't bake it. In our code snippets, R objects that represent food, like `cake` have a numerical value akin to calories, while unevaluated expressions, like `cake_recipe`, don't have a numerical value. Recipes don't have calories -- read as many as you want, but you will still be hungry!
 
 ## Evaluating is Baking Part 2
 
@@ -119,7 +119,7 @@ We got an error when we tried to 'bake' the frosting because we didn't put any b
 
 ## The Recipe versus the Cake Part 2
 
-So what can you do with the expression (recipe) other than evaluate it (bake it)? You can pass it to a function. Imagine you friend really liked the cake and wants the recipe. Giving your friend a cake is very different from giving your friend the *recipe* for cake.
+So what can you do with the expression (recipe) other than evaluate it (bake it)? You can pass it to a function. Imagine your friend really liked the cake and wants the recipe. Giving your friend a cake is very different from giving your friend the *recipe* for cake.
 
 To make it easier to tell what is going on, our friend just prints out whatever you give him.
 
@@ -176,7 +176,7 @@ friend(flour + sugar + eggs)
 friend2(flour + sugar + eggs)
 ```
 
-Dplyr functions are functions that work on a combination of regular objects and expressions. The `data` argument is a regular object, but most of the other arguments use `enexpr` type tricks to go back and get expressions from you. You don't feel like you are passing in an expression ... but your are.
+Dplyr functions are functions that work on a combination of regular objects and expressions. The `data` argument is a regular object, but most of the other arguments use `enexpr` type tricks to go back and get expressions from you. You don't feel like you are passing in an expression ... but you are.
 
 ## Back to the Meta Recipe
 
@@ -193,7 +193,7 @@ Clearly this is the unsatisfying and incomplete. We previously wrote down `cake_
 
 ## Unquoting is for Re-Writing a Meta-Recipe
 
-This is the core purpose of the unquoting operator in `rlang`: `!!` or `UQ()`. This operator allows us to swap in the sub-recipes (sub-expressions) so that we can re-write a full, complete recipe. 
+This is the core purpose of the unquoting operator in `rlang`: `!!` or `UQ()`. This operator allows us to swap in the sub-recipes (sub-expressions) so that we can re-write a full, complete recipe starting from basic ingredients. 
 
 ```{r}
 full_butternut_cake_recipe <- recipe((!!cake_recipe) + butternuts + (!!frosting_recipe))
@@ -201,17 +201,16 @@ full_butternut_cake_recipe <- recipe((!!cake_recipe) + butternuts + (!!frosting_
 friend(full_butternut_cake_recipe)
 ```
 
-Now everything in the full recipe is a basic ingredient. Let's do this again with our `friend2`. In this case, it isn't necessary to explicitly capture the expression with `recipe` because the `friend2` function uses `enexpr` to capture whatever is inside the function call as a recipe (expression). 
+Let's swap in the sub-recipes with `friend2` as well. In this case, it isn't necessary to explicitly capture the expression with `recipe` because the `friend2` function uses `enexpr` to capture whatever is inside the function call as a recipe (expression). 
 
 ```{r}
 friend2((!!cake_recipe) + butternuts + (!!frosting_recipe))
 ```
 
-Again, it doesn't LOOK like we gave `friend2` a recipe, but we did. 
 
 ## Putting the Pieces Together in a Dplyr-Like Function
 
-To put it all together, let's write a function that works like a dplyr-like way. The `frost_it` function will take one regular object (a cake), and one expression (a recipe for frosting). It will then evaluate the expression, add it to the cake, and evaluate the result. It will use `enexpr` so that it conceals the expression-nature of the frosting_recipe argument from the user.
+To put it all together, let's write a function that works in a dplyr-like way. The `frost_it` function will take one regular object (a cake), and one expression (a recipe for frosting). It will then evaluate the expression, add it to the cake, and return the result. It will use `enexpr` so that it conceals the expression-nature of the frosting_recipe argument from the user.
 
 ```{r}
 frost_it <- function(cake, frosting_recipe) {
@@ -236,10 +235,10 @@ We did it!
 
 ## Wrapping Up
 
-This analogy probably doesn't capture everything, but I think it has helped me understand better what is going on with quasi-quotation, and hopefully it will help others. One thing that I have found confusing is the distinction between evaluation and unquoting. Importantly, you only use the unquoting operator `!!` inside of quoting functions (like `expr`, `quo`, or ... "recipe") because it is for re-writing recipes. The end product will be another recipe (expression). By contrast, evaluating will result in a normal value -- a cake!
+This analogy probably doesn't capture everything, but I think it has helped me understand better what is going on with quasi-quotation, and I hope it will help you. One thing that I have found confusing is the distinction between evaluation and unquoting. Importantly, you only use the unquoting operator `!!` inside of quoting functions (like `expr`, `quo`, or ... "recipe") because it is for re-writing recipes. The end product will be another recipe (expression). By contrast, evaluating will result in a normal value -- a cake!
 
 ```{r echo=FALSE}
-library(tidyverse)
+suppressPackageStartupMessages(library(tidyverse))
 
 cheatsheet <- tibble(
   `R term` = c("Expression", "Environment", "Evaluation", "Quasi-Quotation Expression", "Unquoting `!!`/`UQ()`"),
@@ -252,7 +251,7 @@ cheatsheet <- tibble(
                      
 )
 
-cheatsheet
+knitr::kable(cheatsheet)
 ```
 
 

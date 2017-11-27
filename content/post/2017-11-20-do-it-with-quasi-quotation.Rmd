@@ -9,13 +9,17 @@ tags:
   - rlang
 ---
 
-_This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post shows some useful things you can actually do with these tools without attempting to explain what's going on. The [companion post](/posts/2017/quasi-quotation-as-meta-recipe/) tries to establish a mental model for quasi-quotation by analogy to a meta-recipe for cake._
+_This post is one of a series of posts that I am doing about expressions, quasi-quotation, and tidy evaluation. This post shows some useful things you can actually do with these tools without attempting to explain what's going on. The [companion post](/posts/2017/quasi-quotation-as-meta-recipe/) provides a way of thinking about quasi-quotation through an analogy to a meta-recipe for cake._
 
-So you've already made an initial attempt to learn quasi-quotation/tidy evaluation, and the hill to understanding these tools still looks high. You are asking "why bother?", and tempted to just stick with what you know until forced, kicking-and-screaming to do it the "new way." In the following I will try to provide some quick wins and also show a taste of the power of quasi-quotation.
+So you've already made an initial attempt to learn quasi-quotation/tidy evaluation, and the hill to understanding these tools still looks high. You are asking "why bother?", and tempted to just stick with what you know until forced, kicking-and-screaming to do it the "new way." In the following I will try to provide some quick wins through exploration of a few different use cases of quasi-quotation.
 
 ![](https://media.giphy.com/media/qs6ev2pm8g9dS/giphy.gif)
 
-```{r setup}
+
+
+```{r setup, include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(error = TRUE)
+
 suppressPackageStartupMessages(library("tidyverse"))
 suppressPackageStartupMessages(library("rlang"))
 ```
@@ -23,7 +27,7 @@ suppressPackageStartupMessages(library("rlang"))
 
 ## 1) Recode LOTS of values, with Quasi-Quotation
 
-My first practical use of these tools was to apply a large number of replacements with `recode`. If you are only replacing a couple of values, it is easy to type the replacements into the `recode` call:
+My first practical use of these tools was to apply a large number of replacements with `dplyr::recode`. If you are only replacing a couple of values, it is easy to type the replacements into the `recode` call:
 
 ```{r}
 # Recode values with named arguments
@@ -31,7 +35,7 @@ x <- sample(c("a", "b", "c"), 10, replace = TRUE)
 dplyr::recode(x, a = "Apple")
 ```
 
-But wait -- do you really have to manually type in EVERY value that you want to replace?!?! Nope. You need to create a named list, and then use the `!!!` operator (pronounced 'bang bang bang' or unquote-splice).
+But wait -- do you really have to manually type in EVERY value that you want to replace?!?! Nope. You need to create a named list, and then use the `rlang::UQS()/!!!` operator (pronounced 'bang bang bang' or unquote-splice).
 
 ```{r}
 fruits <- list("Apple", "Banana", "Carrot")
@@ -40,12 +44,21 @@ fruit_lookup <- set_names(fruits, c("a", "b", "c"))
 recode(x, !!!fruit_lookup)
 ```
 
-It needs to be a named list (not a vector) because `UQS()`/`!!!` just works on lists. For the purpose of the example I wrote out the lookup, but its easy to make it from a dataframe, for example like:
+It needs to be a named list (not a character vector) because `UQS()`/`!!!` just works on lists. For the purpose of the example I wrote out the lookup, but its easy to make it from a dataframe, for example like:
 
 ```{r}
-fruit_lookup2 <- set_names(fruits, str_to_lower(str_sub(fruits, 1, 1))) %>% as.list()
+fruit_df <- tribble(
+  ~letter, ~fruit,
+  "a", "Apple",
+  "b", "Banana",
+  "c", "Carrot"
+)
+
+fruit_lookup2 <- set_names(fruit_df$fruit, fruit_df$letter) %>% as.list()
+recode(x, !!!fruit_lookup2)
 ```
 
+Many tidyverse functions that take dots can utilize `!!!` in this way.
 
 ## 2) Don't Repeat Yourself, with Quasi-Quotation
 
@@ -148,13 +161,57 @@ knitr::include_app("http://www.jalsalam.com/shiny/demo-app-1/", height = "500px"
 
 Right now you need to use `!!` for `dplyr`/`tidyr` whereas `ggplot2` uses `aes_` and `aes_string`. My understanding is that ggplot2 will also be switchinig over to the rlang quasi-quotation system at some point as well.
 
-## 4) Debug Higher-Order Functions, With Quasi-Quotation
+As a caution, anytime you are turning shiny user input into code which is executed (such as here with unquoting), it is probably a good idea to do some input checking to make sure what you have received is within allowed values. Don't let [this](https://xkcd.com/327/) be you.
 
-Debugging higher-order functions because 
+## 4) Reprex Higher-Order Functions, With Quasi-Quotation
+
+It can be confusing to debug functions like `map` and `lapply` that take other functions as arguments (functions that operate on functions are called higher-order functions). Does the error have to do with the way the `map` call is being constructed, or does it have to do with the function you are passing in?
+
+Quasi-quotation makes it easy to construct dummy functions that help see the calls resulting from `map` or `apply` functions.
+
+Say you are trying to run a suite of different models on your data using different subsets of data (and all combinations of the two). But your code isn't doing what you want:
+
+```{r, eval=FALSE}
+models <- c("JB2", "JBB", "CL") #list of models to apply
+data_grps <- c("A", "B", "C")
+
+result_data <- map2_dfr(models, data_grps, ~mynewmodel(.x, .y))
+
+```
+
+The instinct of every frustrated programmer is to post on Stackoverflow. But how can you make a [reprex](http://reprex.tidyverse.org/) (reproducible example) given that you don't want to share your proprietary data or modeling function?
+
+Quasi-quotation can be handy for isolating parts of your program by simulating other bits. Here we will simulate `mynewmodel` with a function that stores its parameters in a one-row dataframe.
+
+```{r}
+mynewmodel <- function(model, grp) {
+  thecall <- expr(mynewmodel(UQ(model), UQ(grp)))
+  
+  df <- tibble(
+    model = model,
+    grp = grp,
+    call = list(thecall)
+  )
+  
+  invisible(df)
+}
+
+models <- c("JB2", "JBB", "CL") #list of models to apply
+data_grps <- c("A", "B", "C")
+
+result_data <- map2_dfr(models, data_grps, ~mynewmodel(.x, .y))
+result_data$call
+
+```
+
+This is now a full reprex, and the resulting dataframe gives a lot of information about what is going on so you can try different `map` variations without the possibility that the problem is something to do with your modeling function implementation.
+
 
 ## 5) Write New Higher-Order Functions (!?!), With Quasi-Quotation
 
-Quasi-quotation tools are great for writing higher-order functions. As a warm-up, let's write a basic version of the `map` function that evaluates an expression.
+Quasi-quotation tools have enticing possibilities for writing custom higher-order functions because they are all about manipulating expressions and code. I want to admit that this section is more ideas than practical applications, but I thought it would be interesting to see how you can use `rlang` functions to manipulate expressions in a way similar to `purrr::map`.
+
+Let's write a basic version of the `map` function that evaluates an expression. When I tried to read the source code for `purrr::map` I got pretty intimidated, but the pattern that map emulates -- a loop of function calls -- is possible to implement in a simple manner with rlang tools. 
 
 ```{r}
 library(rlang)
@@ -172,7 +229,7 @@ expr_map <- function(.x, .expr, ...) {
 
 ```
 
-We can write an "anonymouns function" in the form of an expression. We will iterate through a `for` loop for each element of `.x` and evaluate the expression. Really? We can write a version of `map` in 4 lines of code?  There are many reasons why the real one is better, but this one really does accomplish the core pattern, but using expressions instead of functions. Like the real map, you can use `.x` as a pronoun
+Instead of an anonymous function (as is often used with map) we pass in an expression. We will iterate through a `for` loop for each element of `.x` and evaluate the expression. Really? We can write a version of `map` in 4 lines of code? There are many reasons why the real one is better, but this one really does accomplish the core pattern, but using expressions instead of functions. Like the real map, you can use `.x` as a pronoun
 
 ```{r}
 expr_map(c(1, 2, 3), expr(.x^2))
@@ -197,18 +254,32 @@ expr_map(c(1, 2, 3), expr(.x^2 + y), y=-1)
 The possibilities are sort of endless. For example, it has always annoyed me that when you use a dataframe with pmap, you need to manually match up the columns with ..1, ..2, etc.
 
 ```{r}
-expr_pmap <- function(.l, .expr, ...) {
+mydf <- tibble(
+  name = c("John", "Jay", "James"),
+  hgt = c(72, 68, 81),
+  wgt = c(171, 140, 190)
+)
+
+pmap(mydf, ~paste0("The BMI of ", ..1, " is ", round(..3^2 / ..2, 1) ))
+```
+
+Our custom version will allow referencing the column names directly in the anonymous expression.
+
+```{r}
+expr_pmap <- function(.data, .expr) {
   out <- list()
 
-  for (i in seq_along(.x)) {
-    out[i] <- eval_tidy(.expr, data = dots_list(..., .x = .x[[i]]) )
+  for (i in 1:nrow(.data)) {
+    out[i] <- eval_tidy(.expr, data = .data[i, ] )
   }
 
   out
 }
+
+expr_pmap(mydf, expr(paste0("The BMI of ", name, " is ", round(wgt^2 / hgt, 2))) )
 ```
 
-
+This implementation is very slow and limited, but I think it is compelling to see how quickly we can write different types of higher-order functions akin to `map` functions to manipulate expressions instead of functions. I can't tell yet in what ways higher-order functions based on expressions or quosures might have different capabilities than the ones we are used to based on functions.
 
 
 
