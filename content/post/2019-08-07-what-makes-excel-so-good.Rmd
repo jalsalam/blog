@@ -1,0 +1,40 @@
+---
+title: What Makes Excel *so* Good
+author: Jameel Alsalam
+date: '2019-08-07'
+slug: what-makes-excel-so-good
+categories:
+  - workflow
+tags: []
+---
+
+Before I dove into R, I spent my days building absurdly large and complex spreadsheets. These days Excel is mostly data entry and output for me, as opposed to analysis tool, but I can't shake the feeling that it does some things right that I need in my rstats work.
+
+As Felienne says, [spreadsheets are code](https://www.youtube.com/watch?v=0yKf8TrLUOw)
+
+In fact, Excel is the most popular programming system out there. A pure, functional reactive programming system at that. People can program Excel with basically no training. These are amazing qualities, but let's get a little more specific. Let's just say I have opinions.
+
+## Things About Spreadsheets I Like
+
+1) **Reproducibility**, you don't need to re-run a spreadsheet or worry if the results will have changed. You open it up and you see the results. Tweak a number and see how the results change. When I open up an R project, I have to re-run and check if Git says something changed. I want the cahced results of the analysis to be the first thing that I see, before deciding if I want to trace it back. Maybe drake? Maybe notebooks? I don't know.
+
+2) **Formatting is beautiful, and clearly separated from data.** Which part of my R code is my real calculations, and which part is workflow, formatting, rallying packages, I/O, etc? And how can I make it seamless to isolate the calculations only, and apply various views and formatting to it. Can I make my hand-rolled code into a package? Will `gt` solve this?
+
+3) **Data provenance**: great tools for tracing formulas forward and back. I want to be able to follow formulas forward and back. Does this mean I need to hand construct my objects with provenance information? It seems like a lot.
+
+4) **Everyone can do it** and it teaches itself. It's not clear if I solve these problems that my colleagues will use it the same way.
+
+
+
+## Things About Spreadsheets I Do Not Like
+
+1) **Formulas are good at manipulating cells, but bad at manipulating tables of cells.** You can basically achieve a series of *vector* manipulations using columns of data and copying down formulas. You can manipulate a 'data frame' if you are willing to name tables or have each sheet be a single object, but formulas don't provide the power or tools to manipulate them. Yes, array formulas exist. More recently there is the PowerPivot data model stuff, and of course VBA ways to do it. But the core doesn't do this well.
+
+2) **Workbooks don't link together well.** Within a single workbook, everything is self-contained and robust. Links can be made to other spreadsheets, but they work differently depending on whether or not the workbooks are open or closed, and they seem to be dependent upon 
+
+3) **No abstracting functions.** You can only do as much as existing functions can do unless you are willing to go VBA. If you build an amazing spreadsheet that does great stuff, it can't be abstracted into something you can use elsewhere. Named ranges, named formulas are there, but they aren't the good part of Excel.
+
+4) **Hard to version data and calculations.** 
+
+5) **So many places for typos to hide** 
+
